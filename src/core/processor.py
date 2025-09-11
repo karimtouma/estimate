@@ -504,7 +504,12 @@ class PDFProcessor:
     
     def _create_intelligent_system(self):
         """Create a lightweight intelligent optimization system."""
-        return IntelligentPromptSystem(self.config)
+        try:
+            from ..optimization.intelligent_gepa_system import IntelligentPromptSystem
+            return IntelligentPromptSystem(self.config)
+        except ImportError:
+            logger.warning("IntelligentPromptSystem not available")
+            return None
     
     def _get_analysis_performance_metrics(self, analysis_type: AnalysisType) -> Dict[str, Any]:
         """
@@ -862,29 +867,82 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                 }
             )
             
-            # Execute enabled analysis types
+            # Execute enabled analysis types IN PARALLEL for maximum performance
             enabled_types = self.config.analysis.enabled_types
             
+            # PARALLEL PROCESSING: Run all core analyses simultaneously
+            parallel_analyses = []
+            analysis_tasks = []
+            
             if "general" in enabled_types:
-                try:
-                    general_data = self.analyze_document(file_uri, AnalysisType.GENERAL)
-                    result.general_analysis = DocumentAnalysis(**general_data)
-                except Exception as e:
-                    logger.error(f"General analysis failed: {e}")
-            
+                parallel_analyses.append(("general", AnalysisType.GENERAL))
             if "sections" in enabled_types:
-                try:
-                    sections_data = self.analyze_document(file_uri, AnalysisType.SECTIONS)
-                    result.sections_analysis = [SectionAnalysis(**sections_data)]
-                except Exception as e:
-                    logger.error(f"Sections analysis failed: {e}")
-            
+                parallel_analyses.append(("sections", AnalysisType.SECTIONS))
             if "data_extraction" in enabled_types:
-                try:
-                    extraction_data = self.analyze_document(file_uri, AnalysisType.DATA_EXTRACTION)
-                    result.data_extraction = DataExtraction(**extraction_data)
-                except Exception as e:
-                    logger.error(f"Data extraction failed: {e}")
+                parallel_analyses.append(("data_extraction", AnalysisType.DATA_EXTRACTION))
+            
+            if parallel_analyses:
+                # Check if parallel processing is enabled
+                enable_parallel = getattr(self.config.processing, 'enable_parallel_core_analysis', True)
+                max_workers = getattr(self.config.processing, 'core_analysis_threads', 3)
+                
+                if enable_parallel and len(parallel_analyses) > 1:
+                    import asyncio
+                    import concurrent.futures
+                    from functools import partial
+                    
+                    logger.info(f"🚀 Starting PARALLEL core analysis: {len(parallel_analyses)} phases simultaneously")
+                    start_parallel = time.time()
+                    
+                    # Create thread pool for parallel execution
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                        # Submit all analysis tasks
+                        future_to_analysis = {}
+                        for analysis_name, analysis_type in parallel_analyses:
+                            future = executor.submit(self.analyze_document, file_uri, analysis_type)
+                            future_to_analysis[future] = (analysis_name, analysis_type)
+                        
+                        # Collect results as they complete
+                        for future in concurrent.futures.as_completed(future_to_analysis):
+                            analysis_name, analysis_type = future_to_analysis[future]
+                            try:
+                                analysis_data = future.result()
+                                
+                                # Process results based on analysis type
+                                if analysis_name == "general":
+                                    result.general_analysis = DocumentAnalysis(**analysis_data)
+                                    logger.info("✅ General analysis completed in parallel")
+                                elif analysis_name == "sections":
+                                    result.sections_analysis = [SectionAnalysis(**analysis_data)]
+                                    logger.info("✅ Sections analysis completed in parallel")
+                                elif analysis_name == "data_extraction":
+                                    result.data_extraction = DataExtraction(**analysis_data)
+                                    logger.info("✅ Data extraction completed in parallel")
+                                    
+                            except Exception as e:
+                                logger.error(f"❌ {analysis_name} analysis failed in parallel execution: {e}")
+                    
+                    parallel_time = time.time() - start_parallel
+                    logger.info(f"🎯 PARALLEL core analysis completed in {parallel_time:.1f}s (vs. {len(parallel_analyses)*30:.0f}s sequential)")
+                    
+                else:
+                    # Fallback to sequential processing
+                    logger.info("📋 Using SEQUENTIAL core analysis (parallel disabled or single analysis)")
+                    for analysis_name, analysis_type in parallel_analyses:
+                        try:
+                            analysis_data = self.analyze_document(file_uri, analysis_type)
+                            
+                            if analysis_name == "general":
+                                result.general_analysis = DocumentAnalysis(**analysis_data)
+                            elif analysis_name == "sections":
+                                result.sections_analysis = [SectionAnalysis(**analysis_data)]
+                            elif analysis_name == "data_extraction":
+                                result.data_extraction = DataExtraction(**analysis_data)
+                                
+                        except Exception as e:
+                            logger.error(f"❌ {analysis_name} analysis failed: {e}")
+            else:
+                logger.warning("No core analysis types enabled")
             
             # Q&A analysis
             if questions:
@@ -899,9 +957,53 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
             
             # Add discovery results if available
             if discovery_result and 'discovery_output' in locals():
-                if not hasattr(result, 'discovery_analysis'):
-                    result.discovery_analysis = discovery_output
+                result.discovery_analysis = discovery_output
                 logger.info("📊 Discovery results added to comprehensive analysis")
+            
+            # CREATE COMPLETE PAGE MAP if enabled and general analysis is available
+            enable_page_mapping = getattr(self.config.processing, 'enable_complete_page_mapping', True)
+            if enable_page_mapping and result.general_analysis and result.general_analysis.main_topics:
+                try:
+                    logger.info("🗺️ Creating complete page-by-page map...")
+                    
+                    # Re-initialize discovery for page mapping (reuse existing PDF connection if possible)
+                    page_discovery = DynamicPlanoDiscovery(self.config, pdf_path)
+                    
+                    # Create complete page map using main topics from general analysis
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        page_map_data = loop.run_until_complete(
+                            page_discovery.create_complete_page_map(
+                                pdf_uri=file_uri,
+                                main_topics=result.general_analysis.main_topics
+                            )
+                        )
+                        
+                        # Convert to Pydantic model
+                        from ..models.schemas import DocumentPageMap, PageClassification
+                        
+                        page_classifications = []
+                        for page_data in page_map_data["pages"]:
+                            page_classifications.append(PageClassification(**page_data))
+                        
+                        result.page_map = DocumentPageMap(
+                            total_pages=page_map_data["total_pages"],
+                            pages=page_classifications,
+                            category_distribution=page_map_data["category_distribution"],
+                            coverage_analysis=page_map_data["coverage_analysis"]
+                        )
+                        
+                        logger.info(f"✅ Page map created: {len(page_classifications)} pages classified")
+                        logger.info(f"📊 Categories found: {list(page_map_data['category_distribution']['_summary']['pages_per_category'].keys())}")
+                        
+                    finally:
+                        loop.close()
+                        page_discovery.close()
+                        
+                except Exception as e:
+                    logger.warning(f"Page map creation failed: {e}")
+                    # Continue without page map
             
             # Add metadata with GEPA information
             gepa_info = self._get_gepa_usage_info()

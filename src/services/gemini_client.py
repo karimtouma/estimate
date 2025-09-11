@@ -61,6 +61,16 @@ class GeminiClient:
         self.client = genai.Client(api_key=config.api.gemini_api_key)
         self.uploaded_files: Dict[str, Any] = {}
         
+        # PARALLEL PROCESSING: Global rate limiting for concurrent requests
+        import threading
+        if not hasattr(GeminiClient, '_global_semaphore'):
+            # Limit concurrent API calls globally across all instances
+            max_concurrent = getattr(config.api, 'max_concurrent_requests', 3)
+            GeminiClient._global_semaphore = threading.Semaphore(max_concurrent)
+            logger.info(f"🚀 Global rate limiting initialized: {max_concurrent} concurrent requests")
+        
+        self.global_semaphore = GeminiClient._global_semaphore
+        
         logger.info(f"Gemini client initialized with model: {config.api.default_model}")
     
     @retry(
@@ -217,23 +227,25 @@ class GeminiClient:
                 generation_config.response_mime_type = "application/json"
                 generation_config.response_schema = response_schema
             
-            # Generate content
-            response = self.client.models.generate_content(
-                model=model,
-                contents=[
-                    types.Content(
-                        role='user',
-                        parts=content_parts
-                    )
-                ],
-                config=generation_config
-            )
-            
-            if not response.text:
-                raise GeminiAPIError("Empty response from Gemini API")
-            
-            logger.debug(f"Content generated successfully ({len(response.text)} chars)")
-            return response.text
+            # PARALLEL PROCESSING: Use global semaphore for intelligent rate limiting
+            with self.global_semaphore:
+                # Generate content
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=[
+                        types.Content(
+                            role='user',
+                            parts=content_parts
+                        )
+                    ],
+                    config=generation_config
+                )
+                
+                if not response.text:
+                    raise GeminiAPIError("Empty response from Gemini API")
+                
+                logger.debug(f"Content generated successfully ({len(response.text)} chars)")
+                return response.text
             
         except Exception as e:
             logger.error(f"Content generation failed: {e}")

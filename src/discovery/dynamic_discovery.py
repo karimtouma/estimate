@@ -168,7 +168,7 @@ class DynamicPlanoDiscovery:
         complexity_scores.sort(key=lambda x: x[1], reverse=True)
         return [page_num for page_num, _ in complexity_scores[:limit]]
     
-    async def initial_exploration(self, sample_size: int = 10, pdf_uri: str = None) -> DiscoveryResult:
+    async def initial_exploration(self, sample_size: int = 10, pdf_uri: str = None, analyze_all_pages: bool = False) -> DiscoveryResult:
         """
         First pass: understand what this document is about.
         
@@ -176,8 +176,13 @@ class DynamicPlanoDiscovery:
         """
         logger.info("Starting initial exploration phase...")
         
-        # Select strategic pages
-        sample_pages = self.strategic_sampling(self.total_pages, sample_size)
+        # Select pages based on analysis mode
+        if analyze_all_pages:
+            logger.info("🔍 EXHAUSTIVE MODE: Analyzing ALL pages for complete document mapping")
+            sample_pages = list(range(self.total_pages))
+        else:
+            # Select strategic pages
+            sample_pages = self.strategic_sampling(self.total_pages, sample_size)
         
         # Build comprehensive exploration prompt for ALL pages at once
         exploration_prompt = f"""
@@ -715,6 +720,251 @@ class DynamicPlanoDiscovery:
                 visual_language["symbols"][element_type] = element.get("meaning", "")
         
         return visual_language
+    
+    async def create_complete_page_map(self, pdf_uri: str, main_topics: List[str]) -> dict:
+        """
+        Create a complete page-by-page map with intelligent batching.
+        
+        STRATEGY: 
+        - Use intelligent batching to analyze all pages efficiently
+        - Leverage smart caching for instant access
+        - Parallel processing with rate limiting
+        - Memory-optimized approach
+        """
+        logger.info(f"🗺️ Creating COMPLETE page map for {self.total_pages} pages")
+        logger.info(f"📋 Main topics for categorization: {main_topics}")
+        
+        start_time = time.time()
+        
+        # Pre-cache ALL pages for optimal performance
+        await self._preload_all_pages()
+        
+        # Create intelligent batches for processing
+        batch_size = 5  # Optimal batch size for page classification
+        page_batches = [list(range(i, min(i + batch_size, self.total_pages))) 
+                       for i in range(0, self.total_pages, batch_size)]
+        
+        logger.info(f"📦 Processing {len(page_batches)} batches of ~{batch_size} pages each")
+        
+        # Process batches in parallel with rate limiting
+        import asyncio
+        from asyncio import Semaphore
+        
+        # Rate limiting: max 2 concurrent batch requests
+        semaphore = Semaphore(2)
+        
+        async def classify_page_batch(batch_pages: List[int]) -> List[dict]:
+            async with semaphore:
+                try:
+                    batch_info = f"pages {[p+1 for p in batch_pages]}"
+                    logger.info(f"🔍 Classifying batch: {batch_info}")
+                    
+                    # Build classification prompt
+                    classification_prompt = f"""
+                    Classify each page in this batch according to these main topics:
+                    {', '.join(main_topics)}
+                    
+                    For pages {[p+1 for p in batch_pages]}, provide:
+                    1. Primary category (which main topic best describes this page)
+                    2. Secondary categories (other relevant topics, if any)
+                    3. Brief content summary (max 100 chars)
+                    4. Key elements visible on the page
+                    5. Confidence score for the classification
+                    
+                    Focus on the specific content and drawings on each page.
+                    """
+                    
+                    # Use batch analysis with PDF URI
+                    response = await asyncio.get_event_loop().run_in_executor(
+                        None,
+                        self._classify_pages_batch,
+                        pdf_uri, classification_prompt, batch_pages, main_topics
+                    )
+                    
+                    logger.info(f"✅ Batch {batch_info} classified")
+                    return response
+                    
+                except Exception as e:
+                    logger.error(f"Error classifying batch {batch_pages}: {e}")
+                    # Return default classifications for failed batch
+                    return [self._get_default_page_classification(p, main_topics) for p in batch_pages]
+        
+        # Execute all batches in parallel
+        logger.info(f"🚀 Starting parallel page classification...")
+        batch_results = await asyncio.gather(*[
+            classify_page_batch(batch) for batch in page_batches
+        ])
+        
+        # Flatten results
+        all_page_classifications = []
+        for batch_result in batch_results:
+            all_page_classifications.extend(batch_result)
+        
+        # Create category distribution
+        category_distribution = self._calculate_category_distribution(all_page_classifications, main_topics)
+        
+        # Create coverage analysis
+        coverage_analysis = self._analyze_topic_coverage(all_page_classifications, main_topics)
+        
+        processing_time = time.time() - start_time
+        
+        logger.info(f"🎯 Complete page map created in {processing_time:.1f}s for {self.total_pages} pages")
+        
+        return {
+            "total_pages": self.total_pages,
+            "pages": all_page_classifications,
+            "category_distribution": category_distribution,
+            "coverage_analysis": coverage_analysis,
+            "processing_metadata": {
+                "total_processing_time": processing_time,
+                "pages_per_second": self.total_pages / processing_time,
+                "batches_processed": len(page_batches),
+                "cache_hits": len(self.page_cache)
+            }
+        }
+    
+    async def _preload_all_pages(self):
+        """Pre-load all pages into cache for optimal performance."""
+        logger.info(f"💾 Pre-loading ALL {self.total_pages} pages into smart cache...")
+        
+        start_time = time.time()
+        
+        # Load pages in chunks to avoid memory issues
+        chunk_size = 10
+        for i in range(0, self.total_pages, chunk_size):
+            chunk_end = min(i + chunk_size, self.total_pages)
+            
+            for page_num in range(i, chunk_end):
+                # Pre-cache text and complexity
+                self._extract_page_text(page_num)
+                self._calculate_visual_complexity(page_num)
+            
+            logger.debug(f"📄 Cached pages {i+1}-{chunk_end}")
+        
+        cache_time = time.time() - start_time
+        logger.info(f"✅ All pages cached in {cache_time:.1f}s - {len(self.page_cache)} pages ready")
+    
+    def _classify_pages_batch(self, pdf_uri: str, prompt: str, batch_pages: List[int], main_topics: List[str]) -> List[dict]:
+        """Classify a batch of pages using the PDF URI."""
+        try:
+            # Enhanced prompt with page focus
+            pages_info = ", ".join([str(p+1) for p in batch_pages])
+            enhanced_prompt = f"{prompt}\n\nAnalyze specifically pages: {pages_info}"
+            
+            response = self.gemini_client.generate_content(
+                file_uri=pdf_uri,
+                prompt=enhanced_prompt,
+                response_schema={
+                    "type": "object",
+                    "properties": {
+                        "page_classifications": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "page_number": {"type": "integer"},
+                                    "primary_category": {"type": "string"},
+                                    "secondary_categories": {"type": "array", "items": {"type": "string"}},
+                                    "content_summary": {"type": "string"},
+                                    "key_elements": {"type": "array", "items": {"type": "string"}},
+                                    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+            
+            # Parse response
+            import json
+            try:
+                result = json.loads(response)
+                classifications = result.get("page_classifications", [])
+                
+                # Enhance with cached complexity scores
+                for classification in classifications:
+                    page_num = classification.get("page_number", 1) - 1  # Convert to 0-indexed
+                    if 0 <= page_num < self.total_pages:
+                        classification["complexity_score"] = self._calculate_visual_complexity(page_num)
+                
+                return classifications
+                
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to parse page classification response for batch {batch_pages}")
+                return [self._get_default_page_classification(p, main_topics) for p in batch_pages]
+                
+        except Exception as e:
+            logger.error(f"Page classification failed for batch {batch_pages}: {e}")
+            return [self._get_default_page_classification(p, main_topics) for p in batch_pages]
+    
+    def _get_default_page_classification(self, page_num: int, main_topics: List[str]) -> dict:
+        """Get default page classification when analysis fails."""
+        return {
+            "page_number": page_num + 1,
+            "primary_category": main_topics[0] if main_topics else "Unknown",
+            "secondary_categories": [],
+            "content_summary": f"Page {page_num + 1} - Analysis failed",
+            "key_elements": [],
+            "complexity_score": self._calculate_visual_complexity(page_num),
+            "confidence": 0.1
+        }
+    
+    def _calculate_category_distribution(self, page_classifications: List[dict], main_topics: List[str]) -> dict:
+        """Calculate distribution of pages by category."""
+        distribution = {topic: [] for topic in main_topics}
+        distribution["Other"] = []
+        
+        for page_class in page_classifications:
+            primary = page_class.get("primary_category", "Other")
+            page_num = page_class.get("page_number", 0)
+            
+            if primary in distribution:
+                distribution[primary].append(page_num)
+            else:
+                distribution["Other"].append(page_num)
+        
+        # Add summary statistics
+        distribution["_summary"] = {
+            "total_pages": len(page_classifications),
+            "categories_found": len([k for k, v in distribution.items() if v and k != "_summary"]),
+            "largest_category": max(main_topics, key=lambda t: len(distribution.get(t, []))),
+            "pages_per_category": {k: len(v) for k, v in distribution.items() if k != "_summary"}
+        }
+        
+        return distribution
+    
+    def _analyze_topic_coverage(self, page_classifications: List[dict], main_topics: List[str]) -> dict:
+        """Analyze how topics are covered across the document."""
+        coverage = {}
+        
+        for topic in main_topics:
+            topic_pages = [p for p in page_classifications 
+                          if p.get("primary_category") == topic or 
+                             topic in p.get("secondary_categories", [])]
+            
+            if topic_pages:
+                page_numbers = [p.get("page_number", 0) for p in topic_pages]
+                coverage[topic] = {
+                    "total_pages": len(topic_pages),
+                    "page_numbers": sorted(page_numbers),
+                    "coverage_percentage": (len(topic_pages) / len(page_classifications)) * 100,
+                    "avg_confidence": sum(p.get("confidence", 0) for p in topic_pages) / len(topic_pages),
+                    "page_range": {
+                        "first": min(page_numbers),
+                        "last": max(page_numbers),
+                        "span": max(page_numbers) - min(page_numbers) + 1
+                    }
+                }
+            else:
+                coverage[topic] = {
+                    "total_pages": 0,
+                    "page_numbers": [],
+                    "coverage_percentage": 0.0,
+                    "avg_confidence": 0.0,
+                    "page_range": None
+                }
+        
+        return coverage
     
     def _initialize_smart_cache(self):
         """

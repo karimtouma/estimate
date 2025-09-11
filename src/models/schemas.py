@@ -161,6 +161,27 @@ class ProcessingMetadata(BaseModel):
     file_info: Optional[dict] = Field(description="Original file information", default={})
 
 
+class PageClassification(BaseModel):
+    """Schema for individual page classification and analysis."""
+    
+    page_number: int = Field(description="Page number (1-indexed)")
+    primary_category: str = Field(description="Primary category from main topics")
+    secondary_categories: List[str] = Field(default=[], description="Additional relevant categories")
+    content_summary: str = Field(description="Brief summary of page content")
+    key_elements: List[str] = Field(default=[], description="Key elements found on this page")
+    complexity_score: float = Field(ge=0.0, le=1.0, description="Visual complexity score")
+    confidence: float = Field(ge=0.0, le=1.0, description="Classification confidence")
+
+
+class DocumentPageMap(BaseModel):
+    """Complete page-by-page mapping of document structure."""
+    
+    total_pages: int = Field(description="Total number of pages in document")
+    pages: List[PageClassification] = Field(description="Classification for each page")
+    category_distribution: dict = Field(description="Distribution of pages by category")
+    coverage_analysis: dict = Field(description="Analysis of topic coverage across pages")
+
+
 class ComprehensiveAnalysisResult(BaseModel):
     """Complete analysis result combining all analysis types."""
     
@@ -170,6 +191,7 @@ class ComprehensiveAnalysisResult(BaseModel):
     data_extraction: Optional[DataExtraction] = None
     qa_analysis: Optional[List[QuestionAnswer]] = None
     discovery_analysis: Optional[dict] = Field(default=None, description="Discovery phase analysis results")
+    page_map: Optional[DocumentPageMap] = Field(default=None, description="Complete page-by-page analysis and categorization")
     metadata: Optional[ProcessingMetadata] = None
     
     class Config:

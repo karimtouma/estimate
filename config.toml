@@ -17,6 +17,8 @@ output_language = "english"
 system_prompts_language = "english"
 # Force English output regardless of input language
 force_english_output = true
+# PARALLEL PROCESSING: Maximum concurrent API requests (3-5 recommended)
+max_concurrent_requests = 3
 
 [processing]
 # Advanced processing configuration
@@ -36,6 +38,14 @@ ocr_confidence_threshold = 0.5
 # Parallelization configuration
 max_parallel_workers = 8
 enable_async_processing = true
+# CORE ANALYSIS PARALLELIZATION: Enable parallel execution of analysis phases
+enable_parallel_core_analysis = true
+# Thread pool size for parallel core analysis
+core_analysis_threads = 3
+# PAGE MAPPING: Enable complete page-by-page analysis and categorization
+enable_complete_page_mapping = true
+# Page mapping batch size (pages per API call)
+page_mapping_batch_size = 5
 
 [container]
 # Container-specific configuration
