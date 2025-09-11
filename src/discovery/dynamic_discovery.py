@@ -867,8 +867,10 @@ class DynamicPlanoDiscovery:
                                     "secondary_categories": {"type": "array", "items": {"type": "string"}},
                                     "content_summary": {"type": "string"},
                                     "key_elements": {"type": "array", "items": {"type": "string"}},
-                                    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
-                                }
+                                    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                                    "complexity_score": {"type": "number", "minimum": 0, "maximum": 1}
+                                },
+                                "required": ["page_number", "primary_category", "content_summary", "confidence"]
                             }
                         }
                     }

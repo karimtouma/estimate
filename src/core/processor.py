@@ -1026,32 +1026,6 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
             if gepa_info:
                 result.metadata.__dict__.update(gepa_info)
             
-            # Add API statistics
-            from ..services.gemini_client import GeminiClient
-            api_stats = GeminiClient.get_api_statistics()
-            
-            # Create a dictionary with API statistics
-            result.api_statistics = {
-                'total_api_calls': api_stats['total_calls'],
-                'calls_by_type': api_stats['calls_by_type'],
-                'token_usage': {
-                    'input_tokens': api_stats['input_tokens'],
-                    'output_tokens': api_stats['output_tokens'],
-                    'cached_tokens': api_stats['cached_input_tokens'],
-                    'total_tokens': api_stats['total_tokens'],
-                    'cache_efficiency_percent': round(api_stats['cache_efficiency'], 1)
-                },
-                'performance': {
-                    'total_api_time_seconds': round(api_stats['total_processing_time'], 2),
-                    'average_time_per_call': round(api_stats['avg_processing_time'], 2)
-                },
-                'estimated_cost_usd': {
-                    'input_cost': round(api_stats['estimated_cost']['input_cost'], 4),
-                    'output_cost': round(api_stats['estimated_cost']['output_cost'], 4),
-                    'total_cost': round(api_stats['estimated_cost']['total_cost'], 4)
-                }
-            }
-            
             logger.info("Comprehensive analysis completed successfully")
             return result
             
@@ -1081,6 +1055,33 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
             # Convert Pydantic model to dict if needed
             if isinstance(results, ComprehensiveAnalysisResult):
                 results_dict = results.model_dump(exclude_none=True)
+                
+                # Add API statistics before saving
+                from ..services.gemini_client import GeminiClient
+                api_stats = GeminiClient.get_api_statistics()
+                
+                if api_stats['total_calls'] > 0:
+                    results_dict['api_statistics'] = {
+                        'total_api_calls': api_stats['total_calls'],
+                        'calls_by_type': api_stats['calls_by_type'],
+                        'token_usage': {
+                            'input_tokens': api_stats['input_tokens'],
+                            'output_tokens': api_stats['output_tokens'],
+                            'cached_tokens': api_stats['cached_input_tokens'],
+                            'total_tokens': api_stats['total_tokens'],
+                            'cache_efficiency_percent': round(api_stats['cache_efficiency'], 1)
+                        },
+                        'performance': {
+                            'total_api_time_seconds': round(api_stats['total_processing_time'], 2),
+                            'average_time_per_call': round(api_stats['avg_processing_time'], 2)
+                        },
+                        'estimated_cost_usd': {
+                            'input_cost': round(api_stats['estimated_cost']['input_cost'], 4),
+                            'output_cost': round(api_stats['estimated_cost']['output_cost'], 4),
+                            'total_cost': round(api_stats['estimated_cost']['total_cost'], 4)
+                        }
+                    }
+                    logger.info(f"📊 API Statistics added: {api_stats['total_calls']} calls, {api_stats['total_tokens']} tokens")
             else:
                 results_dict = results
             
