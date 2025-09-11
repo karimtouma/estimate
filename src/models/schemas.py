@@ -169,6 +169,7 @@ class ComprehensiveAnalysisResult(BaseModel):
     sections_analysis: Optional[List[SectionAnalysis]] = None
     data_extraction: Optional[DataExtraction] = None
     qa_analysis: Optional[List[QuestionAnswer]] = None
+    discovery_analysis: Optional[dict] = Field(default=None, description="Discovery phase analysis results")
     metadata: Optional[ProcessingMetadata] = None
     
     class Config:

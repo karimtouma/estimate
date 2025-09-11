@@ -20,7 +20,16 @@ from ..models.schemas import (
 from ..utils.file_manager import FileManager
 from ..utils.logging_config import setup_logging
 
-logger = logging.getLogger(__name__)
+# Import the new discovery system (FASE 1)
+try:
+    from ..discovery import DynamicPlanoDiscovery
+    DISCOVERY_AVAILABLE = True
+    logger = logging.getLogger(__name__)
+    logger.info("Discovery system (FASE 1) loaded successfully")
+except ImportError:
+    DISCOVERY_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("Discovery system not available - using standard analysis")
 
 
 class ProcessorError(Exception):
@@ -760,14 +769,19 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
     def comprehensive_analysis(
         self,
         pdf_path: Union[str, Path],
-        questions: Optional[List[str]] = None
+        questions: Optional[List[str]] = None,
+        enable_discovery: bool = True
     ) -> ComprehensiveAnalysisResult:
         """
         Perform comprehensive analysis of a PDF document.
         
+        Now includes FASE 1: Discovery system for adaptive analysis
+        without predefined taxonomies.
+        
         Args:
             pdf_path: Path to the PDF file
             questions: Optional list of specific questions
+            enable_discovery: Enable discovery phase for adaptive analysis
             
         Returns:
             Comprehensive analysis results
@@ -779,9 +793,59 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
         
         logger.info(f"Starting comprehensive analysis of: {pdf_path}")
         
+        # Upload PDF once for all analyses
+        file_uri = None
+        
+        # FASE 1: Run discovery phase if enabled and available
+        discovery_result = None
+        if enable_discovery and DISCOVERY_AVAILABLE:
+            logger.info("🔍 FASE 1: Running discovery phase for adaptive analysis...")
+            try:
+                # Upload PDF if not already uploaded
+                if file_uri is None:
+                    file_uri = self.upload_pdf(pdf_path)
+                
+                import asyncio
+                discovery = DynamicPlanoDiscovery(self.config, pdf_path)
+                
+                # Run async discovery in sync context with the uploaded PDF URI
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    discovery_result = loop.run_until_complete(
+                        discovery.initial_exploration(sample_size=10, pdf_uri=file_uri)
+                    )
+                    
+                    logger.info(f"✅ Discovery complete:")
+                    logger.info(f"  - Document type: {discovery_result.document_type}")
+                    logger.info(f"  - Industry domain: {discovery_result.industry_domain}")
+                    logger.info(f"  - Patterns found: {len(discovery_result.discovered_patterns)}")
+                    logger.info(f"  - Nomenclature codes: {len(discovery_result.nomenclature_system.get('patterns', {}))}")
+                    
+                    # Save discovery results
+                    discovery_output = {
+                        "document_type": discovery_result.document_type,
+                        "industry_domain": discovery_result.industry_domain,
+                        "discovered_patterns": discovery_result.discovered_patterns,
+                        "nomenclature_system": discovery_result.nomenclature_system,
+                        "page_organization": discovery_result.page_organization,
+                        "element_types": discovery_result.element_types,
+                        "confidence_score": discovery_result.confidence_score,
+                        "metadata": discovery_result.discovery_metadata
+                    }
+                    
+                finally:
+                    loop.close()
+                    discovery.close()
+                
+            except Exception as e:
+                logger.warning(f"Discovery phase failed, continuing with standard analysis: {e}")
+                discovery_result = None
+        
         try:
-            # Upload file
-            file_uri = self.upload_pdf(pdf_path)
+            # Upload file if not already uploaded
+            if file_uri is None:
+                file_uri = self.upload_pdf(pdf_path)
             
             # Use default questions if none provided
             if questions is None:
@@ -793,6 +857,7 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                     "path": str(pdf_path),
                     "uri": file_uri,
                     "timestamp": time.time(),
+                    "discovery_enabled": enable_discovery and DISCOVERY_AVAILABLE,
                     "size_bytes": pdf_path.stat().st_size
                 }
             )
@@ -832,6 +897,12 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                 except Exception as e:
                     logger.error(f"Q&A analysis failed: {e}")
             
+            # Add discovery results if available
+            if discovery_result and 'discovery_output' in locals():
+                if not hasattr(result, 'discovery_analysis'):
+                    result.discovery_analysis = discovery_output
+                logger.info("📊 Discovery results added to comprehensive analysis")
+            
             # Add metadata with GEPA information
             gepa_info = self._get_gepa_usage_info()
             result.metadata = ProcessingMetadata(
@@ -840,7 +911,8 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                 model_used=self.config.api.default_model,
                 config_file=str(self.config.config_path),
                 environment="container" if self.config.is_container_environment() else "local",
-                file_info=result.file_info
+                file_info=result.file_info,
+                discovery_enabled=enable_discovery and DISCOVERY_AVAILABLE
             )
             
             # Add GEPA information to metadata if available

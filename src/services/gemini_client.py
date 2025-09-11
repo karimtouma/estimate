@@ -248,6 +248,9 @@ class GeminiClient:
         """
         Generate multi-turn conversation content.
         
+        OPTIMIZED VERSION: Processes all questions in a single API call.
+        This reduces API calls from N (one per question) to 1.
+        
         Args:
             file_uri: URI of the uploaded file
             questions: List of questions to ask
@@ -259,27 +262,113 @@ class GeminiClient:
         Raises:
             GeminiAPIError: If multi-turn generation fails
         """
+        if not questions:
+            return []
+        
+        logger.info(f"Processing {len(questions)} questions in batch...")
+        
+        try:
+            # Build batch prompt for all questions
+            enhanced_instruction = self._get_enhanced_question_instruction()
+            
+            # Create numbered question list
+            questions_text = "\n".join([f"{i+1}. {q}" for i, q in enumerate(questions)])
+            
+            batch_prompt = f"""
+            {enhanced_instruction}
+            
+            Please answer ALL of the following questions about this document. 
+            For each question, provide a complete analysis with confidence score and sources.
+            
+            Questions to answer:
+            {questions_text}
+            
+            Respond with detailed answers for each question in the order given.
+            """
+            
+            # Define batch response schema
+            response_schema = {
+                "type": "object",
+                "properties": {
+                    "answers": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question": {"type": "string"},
+                                "answer": {"type": "string"},
+                                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                                "sources": {"type": "array", "items": {"type": "string"}},
+                                "follow_up_questions": {"type": "array", "items": {"type": "string"}}
+                            },
+                            "required": ["question", "answer", "confidence"]
+                        }
+                    }
+                },
+                "required": ["answers"]
+            }
+            
+            # Generate batch response
+            response_text = self.generate_content(
+                file_uri=file_uri,
+                prompt=batch_prompt,
+                response_schema=response_schema
+            )
+            
+            # Parse batch result
+            import json
+            batch_result = json.loads(response_text)
+            
+            results = []
+            answers = batch_result.get("answers", [])
+            
+            # Process each answer and ensure we have all questions covered
+            for i, question in enumerate(questions):
+                if i < len(answers):
+                    result = answers[i].copy()
+                    result["question_index"] = i + 1
+                    # Ensure the question matches (in case of reordering)
+                    result["question"] = question
+                    results.append(result)
+                else:
+                    # Fallback for missing answers
+                    logger.warning(f"Missing answer for question {i+1}: {question}")
+                    results.append({
+                        "question": question,
+                        "question_index": i + 1,
+                        "answer": "Answer not provided in batch response.",
+                        "confidence": 0.0,
+                        "sources": [],
+                        "follow_up_questions": []
+                    })
+            
+            logger.info(f"Batch processing completed: {len(results)} answers generated")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Batch multi-turn processing failed: {e}")
+            # Fallback to sequential processing for critical failures
+            logger.info("Falling back to sequential question processing...")
+            return self._generate_multi_turn_sequential(file_uri, questions, context_parts)
+    
+    def _generate_multi_turn_sequential(
+        self,
+        file_uri: str,
+        questions: List[str],
+        context_parts: Optional[List[types.Part]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Fallback method for sequential question processing.
+        Used when batch processing fails.
+        """
         results = []
         
         for i, question in enumerate(questions):
             logger.debug(f"Processing question {i+1}/{len(questions)}: {question}")
             
             try:
-                # Build conversation parts
-                conversation_parts = [
-                    types.Part.from_uri(
-                        file_uri=file_uri,
-                        mime_type='application/pdf'
-                    )
-                ]
-                
-                # Add context if provided
-                if context_parts:
-                    conversation_parts.extend(context_parts[-3:])  # Last 3 interactions
-                
-                # Add current question with enhanced instruction (including GEPA if available)
+                # Enhanced instruction
                 enhanced_instruction = self._get_enhanced_question_instruction()
-                conversation_parts.append(types.Part.from_text(text=f"{enhanced_instruction}Question: {question}"))
                 
                 # Define response schema
                 response_schema = {
@@ -294,7 +383,7 @@ class GeminiClient:
                     "required": ["question", "answer", "confidence"]
                 }
                 
-                # Generate response with enhanced instruction
+                # Generate response
                 response_text = self.generate_content(
                     file_uri=file_uri,
                     prompt=f"{enhanced_instruction}Question: {question}",
