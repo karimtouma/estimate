@@ -192,6 +192,7 @@ class ComprehensiveAnalysisResult(BaseModel):
     qa_analysis: Optional[List[QuestionAnswer]] = None
     discovery_analysis: Optional[dict] = Field(default=None, description="Discovery phase analysis results")
     page_map: Optional[DocumentPageMap] = Field(default=None, description="Complete page-by-page analysis and categorization")
+    api_statistics: Optional[dict] = Field(default=None, description="Comprehensive API usage statistics including tokens and costs")
     metadata: Optional[ProcessingMetadata] = None
     
     class Config:

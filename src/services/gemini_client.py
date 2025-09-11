@@ -43,6 +43,17 @@ class GeminiClient:
     automatic retries, rate limiting, and comprehensive error handling.
     """
     
+    # Class-level statistics tracking
+    _api_stats = {
+        'total_calls': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'cached_input_tokens': 0,
+        'calls_by_type': {},
+        'processing_times': [],
+        'errors': 0
+    }
+    
     def __init__(self, config: Config):
         """
         Initialize the Gemini client.
@@ -229,6 +240,9 @@ class GeminiClient:
             
             # PARALLEL PROCESSING: Use global semaphore for intelligent rate limiting
             with self.global_semaphore:
+                # Track API call start time
+                start_time = time.time()
+                
                 # Generate content
                 response = self.client.models.generate_content(
                     model=model,
@@ -240,6 +254,16 @@ class GeminiClient:
                     ],
                     config=generation_config
                 )
+                
+                # Track statistics
+                processing_time = time.time() - start_time
+                
+                # Log response structure for debugging
+                logger.debug(f"Response type: {type(response)}")
+                if hasattr(response, '__dict__'):
+                    logger.debug(f"Response attributes: {list(response.__dict__.keys())}")
+                
+                self._track_api_call(response, 'generate_content', processing_time)
                 
                 if not response.text:
                     raise GeminiAPIError("Empty response from Gemini API")
@@ -489,6 +513,116 @@ class GeminiClient:
             }
         except Exception as e:
             raise GeminiAPIError(f"Failed to get file info: {e}") from e
+    
+    def _track_api_call(self, response: Any, call_type: str, processing_time: float) -> None:
+        """
+        Track API call statistics including token usage.
+        
+        Args:
+            response: The API response object
+            call_type: Type of API call (e.g., 'generate_content', 'batch_qa')
+            processing_time: Time taken for the API call in seconds
+        """
+        try:
+            # Update call counts
+            GeminiClient._api_stats['total_calls'] += 1
+            GeminiClient._api_stats['processing_times'].append(processing_time)
+            
+            # Track by call type
+            if call_type not in GeminiClient._api_stats['calls_by_type']:
+                GeminiClient._api_stats['calls_by_type'][call_type] = 0
+            GeminiClient._api_stats['calls_by_type'][call_type] += 1
+            
+            # Extract token usage from response if available
+            tokens_found = False
+            
+            # Try different ways to get token information
+            if hasattr(response, 'usage_metadata'):
+                usage = response.usage_metadata
+                if hasattr(usage, 'prompt_token_count'):
+                    GeminiClient._api_stats['input_tokens'] += usage.prompt_token_count
+                    tokens_found = True
+                if hasattr(usage, 'candidates_token_count'):
+                    GeminiClient._api_stats['output_tokens'] += usage.candidates_token_count
+                    tokens_found = True
+                if hasattr(usage, 'cached_content_token_count'):
+                    GeminiClient._api_stats['cached_input_tokens'] += usage.cached_content_token_count
+                    
+                if tokens_found:
+                    # Log token usage for this call
+                    logger.info(f"📊 API Call [{call_type}]: "
+                              f"Input={getattr(usage, 'prompt_token_count', 0):,} tokens, "
+                              f"Output={getattr(usage, 'candidates_token_count', 0):,} tokens, "
+                              f"Cached={getattr(usage, 'cached_content_token_count', 0):,} tokens, "
+                              f"Time={processing_time:.2f}s")
+            
+            # Try alternative attributes
+            if not tokens_found and hasattr(response, '_result'):
+                result = response._result
+                if hasattr(result, 'usage_metadata'):
+                    usage = result.usage_metadata
+                    if hasattr(usage, 'prompt_token_count'):
+                        GeminiClient._api_stats['input_tokens'] += usage.prompt_token_count
+                        tokens_found = True
+                    if hasattr(usage, 'candidates_token_count'):
+                        GeminiClient._api_stats['output_tokens'] += usage.candidates_token_count
+                        tokens_found = True
+                        
+            if not tokens_found:
+                # Log without token info
+                logger.info(f"📊 API Call [{call_type}]: Time={processing_time:.2f}s (token info not available)")
+                
+        except Exception as e:
+            logger.debug(f"Could not track API statistics: {e}")
+    
+    @classmethod
+    def get_api_statistics(cls) -> Dict[str, Any]:
+        """
+        Get comprehensive API usage statistics.
+        
+        Returns:
+            Dictionary with detailed API usage metrics
+        """
+        stats = cls._api_stats.copy()
+        
+        # Calculate averages
+        if stats['processing_times']:
+            stats['avg_processing_time'] = sum(stats['processing_times']) / len(stats['processing_times'])
+            stats['total_processing_time'] = sum(stats['processing_times'])
+        else:
+            stats['avg_processing_time'] = 0
+            stats['total_processing_time'] = 0
+            
+        # Calculate token costs (approximate)
+        # Gemini pricing: ~$0.00025 per 1K input tokens, ~$0.001 per 1K output tokens
+        stats['estimated_cost'] = {
+            'input_cost': (stats['input_tokens'] / 1000) * 0.00025,
+            'output_cost': (stats['output_tokens'] / 1000) * 0.001,
+            'total_cost': ((stats['input_tokens'] / 1000) * 0.00025) + 
+                         ((stats['output_tokens'] / 1000) * 0.001)
+        }
+        
+        # Token efficiency
+        stats['total_tokens'] = stats['input_tokens'] + stats['output_tokens']
+        stats['cache_efficiency'] = (
+            (stats['cached_input_tokens'] / stats['input_tokens'] * 100) 
+            if stats['input_tokens'] > 0 else 0
+        )
+        
+        return stats
+    
+    @classmethod
+    def reset_statistics(cls) -> None:
+        """Reset API statistics tracking."""
+        cls._api_stats = {
+            'total_calls': 0,
+            'input_tokens': 0,
+            'output_tokens': 0,
+            'cached_input_tokens': 0,
+            'calls_by_type': {},
+            'processing_times': [],
+            'errors': 0
+        }
     
     def cleanup_uploaded_files(self) -> None:
         """Clean up uploaded files from the API."""

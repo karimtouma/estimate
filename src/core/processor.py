@@ -796,6 +796,11 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
         """
         pdf_path = Path(pdf_path)
         
+        # Reset API statistics for this job
+        from ..services.gemini_client import GeminiClient
+        GeminiClient.reset_statistics()
+        logger.info("📊 API statistics tracking initialized")
+        
         logger.info(f"Starting comprehensive analysis of: {pdf_path}")
         
         # Upload PDF once for all analyses
@@ -1021,6 +1026,32 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
             if gepa_info:
                 result.metadata.__dict__.update(gepa_info)
             
+            # Add API statistics
+            from ..services.gemini_client import GeminiClient
+            api_stats = GeminiClient.get_api_statistics()
+            
+            # Create a dictionary with API statistics
+            result.api_statistics = {
+                'total_api_calls': api_stats['total_calls'],
+                'calls_by_type': api_stats['calls_by_type'],
+                'token_usage': {
+                    'input_tokens': api_stats['input_tokens'],
+                    'output_tokens': api_stats['output_tokens'],
+                    'cached_tokens': api_stats['cached_input_tokens'],
+                    'total_tokens': api_stats['total_tokens'],
+                    'cache_efficiency_percent': round(api_stats['cache_efficiency'], 1)
+                },
+                'performance': {
+                    'total_api_time_seconds': round(api_stats['total_processing_time'], 2),
+                    'average_time_per_call': round(api_stats['avg_processing_time'], 2)
+                },
+                'estimated_cost_usd': {
+                    'input_cost': round(api_stats['estimated_cost']['input_cost'], 4),
+                    'output_cost': round(api_stats['estimated_cost']['output_cost'], 4),
+                    'total_cost': round(api_stats['estimated_cost']['total_cost'], 4)
+                }
+            }
+            
             logger.info("Comprehensive analysis completed successfully")
             return result
             
@@ -1124,8 +1155,50 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
+        # Display API statistics before cleanup
+        self._display_api_statistics()
+        
         # Cleanup resources
         if hasattr(self, 'gemini_client'):
             self.gemini_client.cleanup_uploaded_files()
         
         logger.info("PDFProcessor cleanup completed")
+    
+    def _display_api_statistics(self) -> None:
+        """Display comprehensive API usage statistics."""
+        from ..services.gemini_client import GeminiClient
+        
+        stats = GeminiClient.get_api_statistics()
+        
+        if stats['total_calls'] > 0:
+            logger.info("\n" + "="*80)
+            logger.info("📊 **GEMINI API USAGE STATISTICS**")
+            logger.info("="*80)
+            
+            # API Calls Summary
+            logger.info(f"\n🔢 **API CALLS**")
+            logger.info(f"  • Total Calls: {stats['total_calls']}")
+            logger.info(f"  • Call Types:")
+            for call_type, count in stats['calls_by_type'].items():
+                logger.info(f"    - {call_type}: {count} calls")
+            
+            # Token Usage
+            logger.info(f"\n💬 **TOKEN USAGE**")
+            logger.info(f"  • Input Tokens: {stats['input_tokens']:,}")
+            logger.info(f"  • Output Tokens: {stats['output_tokens']:,}")
+            logger.info(f"  • Cached Tokens: {stats['cached_input_tokens']:,}")
+            logger.info(f"  • Total Tokens: {stats['total_tokens']:,}")
+            logger.info(f"  • Cache Efficiency: {stats['cache_efficiency']:.1f}%")
+            
+            # Performance Metrics
+            logger.info(f"\n⚡ **PERFORMANCE**")
+            logger.info(f"  • Total Processing Time: {stats['total_processing_time']:.2f}s")
+            logger.info(f"  • Average Time per Call: {stats['avg_processing_time']:.2f}s")
+            
+            # Cost Estimation
+            logger.info(f"\n💰 **ESTIMATED COST**")
+            logger.info(f"  • Input Cost: ${stats['estimated_cost']['input_cost']:.4f}")
+            logger.info(f"  • Output Cost: ${stats['estimated_cost']['output_cost']:.4f}")
+            logger.info(f"  • Total Cost: ${stats['estimated_cost']['total_cost']:.4f}")
+            
+            logger.info("\n" + "="*80 + "\n")
