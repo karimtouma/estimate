@@ -1,0 +1,243 @@
+# Docker Compose for PDF Estimator
+# Modern, production-ready configuration with development support
+
+# Common service configuration
+x-common-variables: &common-variables
+  CONTAINER: "true"
+  PYTHONUNBUFFERED: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+x-common-volumes: &common-volumes
+  # Data directories
+  - ./input:/app/input
+  - ./output:/app/output
+  - ./logs:/app/logs
+  - ./temp:/app/temp
+  # Job configurations
+  - ./jobs:/app/jobs:ro
+  # Configuration
+  - ./config.toml:/app/config.toml:ro
+
+services:
+  # Production service
+  pdf-estimator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+      cache_from:
+        - pdf-estimator:latest
+        - python:3.12-slim
+    
+    image: pdf-estimator:latest
+    container_name: pdf-estimator
+    hostname: pdf-estimator
+    
+    environment:
+      <<: *common-variables
+      LOG_LEVEL: INFO
+    
+    env_file:
+      - .env
+    
+    volumes: *common-volumes
+    
+    networks:
+      - pdf-network
+    
+    ports:
+      - "8000:8000"
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "from src.core.config import get_config; get_config().validate()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    restart: unless-stopped
+    
+    # Security
+    user: "1000:1000"
+    read_only: false
+    
+    # Default command
+    command: ["python", "-m", "src.cli"]
+    
+    labels:
+      - "traefik.enable=false"
+      - "com.pdf-estimator.service=main"
+      - "com.pdf-estimator.version=2.0.0"
+
+  # Development service
+  pdf-estimator-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    
+    image: pdf-estimator:dev
+    container_name: pdf-estimator-dev
+    hostname: pdf-estimator-dev
+    
+    environment:
+      <<: *common-variables
+      LOG_LEVEL: DEBUG
+      DEBUG: "true"
+      DEVELOPMENT: "true"
+    
+    env_file:
+      - .env
+    
+    volumes:
+      # Source code mounting for hot reload
+      - ./src:/app/src
+      - ./*.py:/app/
+      - ./pyproject.toml:/app/pyproject.toml
+      # Data directories
+      - ./input:/app/input
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+      # Configuration
+      - ./config.toml:/app/config.toml
+    
+    networks:
+      - pdf-network
+    
+    ports:
+      - "8001:8000"
+      - "5678:5678"  # Debug port
+    
+    # Interactive mode for development
+    stdin_open: true
+    tty: true
+    
+    # Development command
+    command: ["python", "-c", "print('🛠️ Development environment ready. Use docker exec -it pdf-estimator-dev bash'); import time; time.sleep(3600)"]
+    
+    profiles:
+      - dev
+      - development
+    
+    labels:
+      - "com.pdf-estimator.service=development"
+      - "com.pdf-estimator.version=2.0.0"
+
+  # Testing service
+  pdf-estimator-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    
+    image: pdf-estimator:test
+    container_name: pdf-estimator-test
+    
+    environment:
+      <<: *common-variables
+      LOG_LEVEL: DEBUG
+      TESTING: "true"
+    
+    env_file:
+      - .env
+    
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./setup.cfg:/app/setup.cfg
+      - ./coverage.xml:/app/coverage.xml
+    
+    networks:
+      - pdf-network
+    
+    command: ["python", "-m", "pytest", "--cov=src", "--cov-report=xml", "--cov-report=term-missing"]
+    
+    profiles:
+      - test
+      - testing
+    
+    labels:
+      - "com.pdf-estimator.service=testing"
+
+  # Monitoring service (optional)
+  pdf-estimator-monitor:
+    image: prom/prometheus:latest
+    container_name: pdf-estimator-monitor
+    
+    ports:
+      - "9090:9090"
+    
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    
+    networks:
+      - pdf-network
+    
+    profiles:
+      - monitoring
+      - full
+    
+    labels:
+      - "com.pdf-estimator.service=monitoring"
+
+networks:
+  pdf-network:
+    driver: bridge
+    name: pdf-estimator-network
+    labels:
+      - "com.pdf-estimator.network=main"
+
+volumes:
+  # Named volumes for data persistence
+  pdf_data:
+    driver: local
+    name: pdf-estimator-data
+    labels:
+      - "com.pdf-estimator.volume=data"
+  
+  pdf_logs:
+    driver: local
+    name: pdf-estimator-logs
+    labels:
+      - "com.pdf-estimator.volume=logs"
+  
+  prometheus_data:
+    driver: local
+    name: pdf-estimator-prometheus
+    labels:
+      - "com.pdf-estimator.volume=prometheus"
+
+# Secrets management (for production)
+secrets:
+  gemini_api_key:
+    file: ./secrets/gemini_api_key.txt
+  
+  # Example external secret
+  # gemini_api_key:
+  #   external: true

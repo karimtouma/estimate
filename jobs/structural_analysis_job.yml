@@ -1,0 +1,87 @@
+# Structural Blueprint Analysis Job Configuration
+# Define analysis jobs with specific PDF paths and parameters
+
+job_config:
+  # Job identification
+  job_id: "structural_analysis_001"
+  job_name: "Residential Blueprint Analysis"
+  description: "Comprehensive analysis of residential structural blueprints"
+  
+  # Input configuration
+  input:
+    pdf_path: "/app/input/file.pdf"
+    pdf_type: "structural_blueprint"
+    expected_pages: 51-55
+    
+  # Analysis configuration
+  analysis:
+    mode: "comprehensive"
+    enable_multi_agent: true
+    parallel_workers: 6
+    
+    # Analysis types to perform
+    enabled_analyses:
+      - page_taxonomy
+      - element_detection
+      - spatial_analysis
+      - pattern_recognition
+      - cross_page_analysis
+    
+    # Confidence thresholds
+    thresholds:
+      page_classification: 0.7
+      element_detection: 0.6
+      relationship_mapping: 0.5
+    
+    # DSPy configuration
+    dspy:
+      enable_optimization: true
+      reasoning_depth: 3
+      chain_types:
+        - "chain_of_thought"
+        - "react"
+        - "multi_chain_comparison"
+    
+    # GEPA optimization configuration
+    gepa:
+      enable_prompt_optimization: true
+      optimization_generations: 10
+      population_size: 8
+      mutation_strategies:
+        - "reflection_based_mutation"
+        - "crossover_mutation"
+        - "random_perturbation"
+      target_improvement: 0.15
+      use_cached_optimization: true
+    
+    # Context management
+    context:
+      enable_cross_page: true
+      context_window_size: 10
+      memory_retention: 200
+  
+  # Output configuration
+  output:
+    base_filename: "structural_analysis"
+    save_intermediate_results: true
+    export_formats:
+      - json
+      - html
+      - markdown
+    
+    # Result organization
+    organize_by_date: true
+    create_summary_report: true
+    
+  # Performance configuration
+  performance:
+    max_processing_time: 1800  # 30 minutes
+    memory_limit: "4GB"
+    enable_caching: true
+    cache_duration: 3600  # 1 hour
+  
+  # Notification configuration
+  notifications:
+    enable_progress_updates: true
+    enable_completion_notification: true
+    log_level: "INFO"

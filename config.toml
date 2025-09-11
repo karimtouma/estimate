@@ -1,0 +1,113 @@
+# PDF Processor Configuration
+# Main configuration for PDF processing system
+
+[api]
+# API Configuration
+# gemini_api_key se lee desde variable de entorno GEMINI_API_KEY
+# Configurar en .env: GEMINI_API_KEY=tu_api_key_aqui
+# Default model to use
+default_model = "gemini-2.5-pro"
+# Request timeout (seconds)
+request_timeout = 300
+# Maximum retries for failed requests
+max_retries = 5
+# Language for AI responses and analysis
+output_language = "english"
+# System prompt language settings
+system_prompts_language = "english"
+# Force English output regardless of input language
+force_english_output = true
+
+[processing]
+# Advanced processing configuration
+max_pdf_size_mb = 50
+# Temporary directory for files
+temp_dir = "/tmp/pdf_processor"
+# Keep temporary files after processing
+keep_temp_files = false
+# Logging level (DEBUG, INFO, WARNING, ERROR)
+log_level = "INFO"
+# Image configuration
+image_dpi = 300
+image_enhancement = true
+# OCR configuration
+ocr_language = "eng"
+ocr_confidence_threshold = 0.5
+# Parallelization configuration
+max_parallel_workers = 8
+enable_async_processing = true
+
+[container]
+# Container-specific configuration
+input_dir = "/app/input"
+output_dir = "/app/output"
+logs_dir = "/app/logs"
+# Auto-detect if running in container
+auto_detect = true
+
+[analysis]
+# Advanced analysis configuration for structural blueprints
+# Default enabled analysis types
+enabled_types = ["general", "sections", "data_extraction"]
+# Agent configuration
+max_concurrent_agents = 4
+enable_multi_turn_reasoning = true
+enable_cross_page_analysis = true
+# GEPA/DSPy intelligent optimization system
+enable_dspy_optimization = true
+dspy_reasoning_depth = 3
+# Intelligent auto-optimization system
+auto_gepa_optimization = true
+min_analyses_for_gepa = 5
+# Performance thresholds for triggering optimization
+confidence_threshold = 0.8
+accuracy_threshold = 0.75
+max_error_rate = 0.2
+# Optimization focus areas
+optimize_for_accuracy = true
+optimize_for_reliability = true
+optimize_for_efficiency = true
+# Taxonomy configuration
+taxonomy_confidence_threshold = 0.7
+element_detection_threshold = 0.6
+# Save conversation history
+save_conversation_history = true
+# Maximum items in history
+max_history_items = 200
+# Default questions for structural analysis (universal for any type of blueprint)
+default_questions = [
+    "What type of structure or building is shown in this blueprint?",
+    "What are the main structural elements and systems visible?",
+    "What construction materials and specifications are indicated?",
+    "What are the key dimensions and measurements shown?",
+    "What structural loads, forces, or engineering details are specified?",
+    "Are there foundation details, footings, or underground elements shown?",
+    "What construction methods and systems are being used?",
+    "What technical specifications, codes, or standards are referenced?"
+]
+# Analysis instructions
+analysis_instructions = "Always provide responses in English. Analyze technical drawings, blueprints, and construction documents. Focus on structural, architectural, mechanical, electrical, and civil engineering aspects."
+
+[output]
+# Output configuration
+# Output file format
+format = "json"
+# Include metadata in results
+include_metadata = true
+# Create backup of results
+create_backup = false
+# Compress large output files
+compress_large_files = true
+# Minimum size for compression (MB)
+compression_threshold_mb = 10
+
+[security]
+# Security configuration
+# Validate file types
+validate_file_types = true
+# Allowed file extensions
+allowed_extensions = [".pdf"]
+# Scan files for malware (requires clamav)
+scan_for_malware = false
+# Strip metadata from files
+strip_metadata = false

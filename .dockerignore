@@ -1,0 +1,73 @@
+# PDF Estimator - Docker Ignore Rules
+
+# Git and version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python development
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+.venv/
+venv/
+env/
+
+# Application data (mounted as volumes)
+input/*.pdf
+output/*.json
+logs/*.log
+temp/*
+
+# Development tools (commented out - needed for dev builds)
+# .pre-commit-config.yaml
+# setup.cfg
+# requirements-dev.txt
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Backup files
+backup-*.tar.gz
+*.backup_*
+
+# Temporary files
+tmp/
+cache/
+
+# Node modules (if any)
+node_modules/
+
+# Secrets and environment
+.env
+.env.*
+secrets/
