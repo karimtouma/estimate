@@ -52,11 +52,7 @@ job-quick: check-config ## ⚡ Quick PDF analysis (faster, less detailed)
 	@echo -e "$(BLUE)⚡ Quick PDF analysis...$(RESET)"
 	$(DOCKER_COMPOSE) run --rm pdf-estimator python -m src.cli analyze /app/input/file.pdf --analysis-type general
 
-.PHONY: job-yaml
-job-yaml: build check-config ## 📋 Execute job from YAML (advanced features)
-	@echo -e "$(BLUE)📋 YAML-based job execution...$(RESET)"
-	@echo -e "$(YELLOW)⚠️  This requires rebuilding the image$(RESET)"
-	$(DOCKER_COMPOSE) run --rm pdf-estimator python run_job.py
+# job-yaml removed - use job or job-quick for standard analysis
 
 .PHONY: chat
 chat: check-config ## 💬 Interactive chat with PDF
@@ -174,5 +170,5 @@ status: ## 📈 Show project status
 .PRECIOUS: .env config.toml
 
 # Declare phony targets
-.PHONY: help job job-quick job-yaml chat setup check-system create-dirs setup-env check-config \
+.PHONY: help job job-quick chat setup check-system create-dirs setup-env check-config \
         build shell results clean clean-all status

@@ -168,6 +168,54 @@ graph TD
 
 ---
 
+## 🛠️ **Optimizaciones Técnicas**
+
+### **🚀 Sistema de Descubrimiento Adaptativo**
+
+**Enfoque Tradicional:**
+```python
+# Análisis secuencial página por página
+for page_num in sample_pages:  # Solo algunas páginas
+    discovery = analyze_page_individually(page_num)  # 1 llamada API cada una
+```
+
+**Enfoque Optimizado:**
+```python
+# Análisis por lotes con muestreo adaptativo
+sample_pages = strategic_sampling(total_pages, adaptive=True)
+discovery = analyze_batch_discovery(pdf_uri, sample_pages)  # 1 llamada API
+```
+
+**Beneficios Técnicos:**
+- **Muestreo Adaptativo**: Cobertura basada en tamaño del documento
+- **Procesamiento por Lotes**: Una llamada API vs. múltiples secuenciales
+- **Pre-caché**: Páginas críticas cargadas durante inicialización
+
+### **⚡ Procesamiento Paralelo de Consultas**
+
+**Enfoque Tradicional:**
+```python
+# Procesamiento secuencial de preguntas
+results = []
+for question in questions:  # 8 preguntas
+    answer = process_question(question)  # 1 llamada API cada una
+    results.append(answer)
+```
+
+**Enfoque Optimizado:**
+```python
+# Procesamiento por lotes de múltiples preguntas
+all_questions = prepare_batch_questions(questions)
+answers = process_batch_qa(all_questions)  # 1 llamada API para todas
+```
+
+**Beneficios Técnicos:**
+- **Reducción de Latencia**: Menos round-trips de red
+- **Control de Concurrencia**: Semáforos para rate limiting
+- **Tolerancia a Fallos**: Degradación automática a procesamiento secuencial
+
+---
+
 ## 🔬 Arquitectura y Motor de Análisis
 
 ### **El Pipeline de Inteligencia Estimador v2.0**
