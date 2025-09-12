@@ -535,41 +535,52 @@ class GeminiClient:
             
             # Extract token usage from response if available
             tokens_found = False
+            input_tokens = 0
+            output_tokens = 0
+            cached_tokens = 0
             
-            # Try different ways to get token information
+            # Method 1: Direct usage_metadata attribute
             if hasattr(response, 'usage_metadata'):
                 usage = response.usage_metadata
-                if hasattr(usage, 'prompt_token_count'):
-                    GeminiClient._api_stats['input_tokens'] += usage.prompt_token_count
-                    tokens_found = True
-                if hasattr(usage, 'candidates_token_count'):
-                    GeminiClient._api_stats['output_tokens'] += usage.candidates_token_count
-                    tokens_found = True
-                if hasattr(usage, 'cached_content_token_count'):
-                    GeminiClient._api_stats['cached_input_tokens'] += usage.cached_content_token_count
-                    
-                if tokens_found:
-                    # Log token usage for this call
-                    logger.info(f"📊 API Call [{call_type}]: "
-                              f"Input={getattr(usage, 'prompt_token_count', 0):,} tokens, "
-                              f"Output={getattr(usage, 'candidates_token_count', 0):,} tokens, "
-                              f"Cached={getattr(usage, 'cached_content_token_count', 0):,} tokens, "
-                              f"Time={processing_time:.2f}s")
+                if usage:
+                    input_tokens = getattr(usage, 'prompt_token_count', 0)
+                    output_tokens = getattr(usage, 'candidates_token_count', 0)
+                    cached_tokens = getattr(usage, 'cached_content_token_count', 0)
+                    tokens_found = (input_tokens > 0 or output_tokens > 0)
             
-            # Try alternative attributes
+            # Method 2: Through _result attribute
             if not tokens_found and hasattr(response, '_result'):
                 result = response._result
                 if hasattr(result, 'usage_metadata'):
                     usage = result.usage_metadata
-                    if hasattr(usage, 'prompt_token_count'):
-                        GeminiClient._api_stats['input_tokens'] += usage.prompt_token_count
+                    if usage:
+                        input_tokens = getattr(usage, 'prompt_token_count', 0)
+                        output_tokens = getattr(usage, 'candidates_token_count', 0)
+                        cached_tokens = getattr(usage, 'cached_content_token_count', 0)
+                        tokens_found = (input_tokens > 0 or output_tokens > 0)
+            
+            # Method 3: Through candidates attribute
+            if not tokens_found and hasattr(response, 'candidates'):
+                if response.candidates and len(response.candidates) > 0:
+                    candidate = response.candidates[0]
+                    if hasattr(candidate, 'token_count'):
+                        output_tokens = candidate.token_count
                         tokens_found = True
-                    if hasattr(usage, 'candidates_token_count'):
-                        GeminiClient._api_stats['output_tokens'] += usage.candidates_token_count
-                        tokens_found = True
-                        
-            if not tokens_found:
-                # Log without token info
+            
+            # Update statistics if tokens found
+            if tokens_found:
+                GeminiClient._api_stats['input_tokens'] += input_tokens
+                GeminiClient._api_stats['output_tokens'] += output_tokens
+                GeminiClient._api_stats['cached_input_tokens'] += cached_tokens
+                
+                # Log token usage for this call
+                logger.info(f"📊 API Call [{call_type}]: "
+                          f"Input={input_tokens:,} tokens, "
+                          f"Output={output_tokens:,} tokens, "
+                          f"Cached={cached_tokens:,} tokens, "
+                          f"Time={processing_time:.2f}s")
+            else:
+                # Log API call even without token info
                 logger.info(f"📊 API Call [{call_type}]: Time={processing_time:.2f}s (token info not available)")
                 
         except Exception as e:

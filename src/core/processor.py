@@ -1061,27 +1061,42 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                 api_stats = GeminiClient.get_api_statistics()
                 
                 if api_stats['total_calls'] > 0:
-                    results_dict['api_statistics'] = {
+                    # Build statistics dict with available data
+                    stats_dict = {
                         'total_api_calls': api_stats['total_calls'],
                         'calls_by_type': api_stats['calls_by_type'],
-                        'token_usage': {
+                        'performance': {
+                            'total_api_time_seconds': round(api_stats['total_processing_time'], 2),
+                            'average_time_per_call': round(api_stats['avg_processing_time'], 2)
+                        }
+                    }
+                    
+                    # Add token usage only if we have token data
+                    if api_stats['total_tokens'] > 0:
+                        stats_dict['token_usage'] = {
                             'input_tokens': api_stats['input_tokens'],
                             'output_tokens': api_stats['output_tokens'],
                             'cached_tokens': api_stats['cached_input_tokens'],
                             'total_tokens': api_stats['total_tokens'],
                             'cache_efficiency_percent': round(api_stats['cache_efficiency'], 1)
-                        },
-                        'performance': {
-                            'total_api_time_seconds': round(api_stats['total_processing_time'], 2),
-                            'average_time_per_call': round(api_stats['avg_processing_time'], 2)
-                        },
-                        'estimated_cost_usd': {
+                        }
+                        stats_dict['estimated_cost_usd'] = {
                             'input_cost': round(api_stats['estimated_cost']['input_cost'], 4),
                             'output_cost': round(api_stats['estimated_cost']['output_cost'], 4),
                             'total_cost': round(api_stats['estimated_cost']['total_cost'], 4)
                         }
-                    }
-                    logger.info(f"📊 API Statistics added: {api_stats['total_calls']} calls, {api_stats['total_tokens']} tokens")
+                        logger.info(f"📊 API Statistics added: {api_stats['total_calls']} calls, {api_stats['total_tokens']} tokens")
+                    else:
+                        # No token data available
+                        stats_dict['token_usage'] = {
+                            'note': 'Token usage data not available from API',
+                            'input_tokens': 0,
+                            'output_tokens': 0,
+                            'total_tokens': 0
+                        }
+                        logger.info(f"📊 API Statistics added: {api_stats['total_calls']} calls (token data not available)")
+                    
+                    results_dict['api_statistics'] = stats_dict
             else:
                 results_dict = results
             

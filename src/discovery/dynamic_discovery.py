@@ -795,10 +795,17 @@ class DynamicPlanoDiscovery:
             classify_page_batch(batch) for batch in page_batches
         ])
         
-        # Flatten results
+        # Flatten results and remove duplicates
         all_page_classifications = []
+        seen_pages = set()
         for batch_result in batch_results:
-            all_page_classifications.extend(batch_result)
+            for classification in batch_result:
+                page_num = classification.get("page_number", 0)
+                if page_num not in seen_pages:
+                    all_page_classifications.append(classification)
+                    seen_pages.add(page_num)
+                else:
+                    logger.warning(f"⚠️ Duplicate page {page_num} found, skipping")
         
         # Create category distribution
         category_distribution = self._calculate_category_distribution(all_page_classifications, main_topics)
@@ -1183,11 +1190,12 @@ class DynamicPlanoDiscovery:
             element_types=discovery.get("unique_elements", []),
             confidence_score=discovery.get("document_indicators", {}).get("confidence", 0.5),
             discovery_metadata={
-                "pages_analyzed": len(sample_pages),
+                "pages_analyzed": self.total_pages,  # We analyze ALL pages in exhaustive mode
                 "total_pages": self.total_pages,
                 "unique_patterns": len(set(visual_patterns)),
                 "nomenclature_codes": len(set(nomenclature_codes)),
-                "batch_analysis": True  # Flag to indicate this was batch processed
+                "batch_analysis": True,  # Flag to indicate this was batch processed
+                "exhaustive_analysis": True  # Flag to indicate complete analysis
             }
         )
         
