@@ -883,11 +883,15 @@ class DynamicPlanoDiscovery:
                 result = json.loads(response)
                 classifications = result.get("page_classifications", [])
                 
-                # Enhance with cached complexity scores
+                # Enhance with cached complexity scores and ensure required fields
                 for classification in classifications:
                     page_num = classification.get("page_number", 1) - 1  # Convert to 0-indexed
                     if 0 <= page_num < self.total_pages:
                         classification["complexity_score"] = self._calculate_visual_complexity(page_num)
+                    
+                    # Ensure confidence field exists (default to 0.8 if missing)
+                    if "confidence" not in classification:
+                        classification["confidence"] = 0.8
                 
                 return classifications
                 
