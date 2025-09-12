@@ -3,7 +3,7 @@
 
 > **Transforma planos técnicos en inteligencia accionable con análisis de IA de nivel empresarial**
 
-[![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Licencia: BSD-2-Clause](https://img.shields.io/badge/Licencia-BSD--2--Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-listo-blue.svg)](https://www.docker.com/)
 [![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.5%20Flash-orange.svg)](https://ai.google.dev/)
@@ -860,7 +860,7 @@ Damos la bienvenida a contribuciones de la comunidad de tecnología de construcc
 
 ## 📄 **Licencia y Legal**
 
-**Estimador** se publica bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+**Estimador** se publica bajo la Licencia BSD 2-Clause - ver el archivo [LICENSE](LICENSE) para detalles.
 
 ### **Reconocimientos de Terceros**
 
