@@ -19,6 +19,7 @@ from ..models.schemas import (
 )
 from ..utils.file_manager import FileManager
 from ..utils.logging_config import setup_logging
+from ..utils.hallucination_detector import validate_comprehensive_result, validate_data_extraction
 
 # Import the new discovery system (FASE 1)
 try:
@@ -275,13 +276,17 @@ class PDFProcessor:
             {language_instruction}
             
             Extract specific structured data from this document:
-            - Entities mentioned (people, organizations, places, companies)
-            - Relevant dates and important deadlines
-            - Numbers, metrics and key statistics
-            - References, citations and external sources
-            - Technical terms and specialized vocabulary
-            - Engineering specifications and codes
-            - Material specifications and standards
+            - Entities mentioned (people, organizations, places, companies) - MAX 50 items
+            - Relevant dates and important deadlines - MAX 30 items
+            - Numbers, metrics and key statistics - MAX 40 items, each under 100 characters
+            - References, citations and external sources - MAX 25 items
+            - Technical terms and specialized vocabulary - MAX 30 items
+            
+            IMPORTANT: 
+            - Each item must be unique and concise
+            - No repetitions or variations of the same item
+            - Extract only the most relevant and important data
+            - For numbers, include units and context (e.g., "3,287 SF building area")
             """
         }
         
@@ -921,8 +926,10 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                                     result.sections_analysis = [SectionAnalysis(**analysis_data)]
                                     logger.info("✅ Sections analysis completed in parallel")
                                 elif analysis_name == "data_extraction":
-                                    result.data_extraction = DataExtraction(**analysis_data)
-                                    logger.info("✅ Data extraction completed in parallel")
+                                    # Validate and clean data extraction for hallucinations
+                                    cleaned_data = validate_data_extraction(analysis_data)
+                                    result.data_extraction = DataExtraction(**cleaned_data)
+                                    logger.info("✅ Data extraction completed in parallel (validated for hallucinations)")
                                     
                             except Exception as e:
                                 logger.error(f"❌ {analysis_name} analysis failed in parallel execution: {e}")
@@ -942,7 +949,9 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                             elif analysis_name == "sections":
                                 result.sections_analysis = [SectionAnalysis(**analysis_data)]
                             elif analysis_name == "data_extraction":
-                                result.data_extraction = DataExtraction(**analysis_data)
+                                # Validate and clean data extraction for hallucinations
+                                cleaned_data = validate_data_extraction(analysis_data)
+                                result.data_extraction = DataExtraction(**cleaned_data)
                                 
                         except Exception as e:
                             logger.error(f"❌ {analysis_name} analysis failed: {e}")

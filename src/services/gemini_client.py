@@ -243,6 +243,12 @@ class GeminiClient:
                 # Track API call start time
                 start_time = time.time()
                 
+                # Add safety settings to prevent hallucinations
+                generation_config.temperature = 0.3  # Lower temperature for more deterministic output
+                generation_config.top_p = 0.8  # Reduce randomness
+                generation_config.top_k = 40  # Limit token selection
+                generation_config.max_output_tokens = 8192  # Reasonable limit
+                
                 # Generate content
                 response = self.client.models.generate_content(
                     model=model,

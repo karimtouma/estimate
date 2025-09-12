@@ -104,8 +104,10 @@ class DataExtraction(BaseModel):
         max_items=30
     )
     numbers: List[str] = Field(
-        description="Important numbers, metrics, and statistics",
-        max_items=40
+        description="Important numbers, metrics, and statistics (max 100 chars each)",
+        max_items=40,
+        # Add validation to prevent hallucinations
+        examples=["3,287 SF", "79 occupants", "400A electrical service"]
     )
     references: List[str] = Field(
         description="Citations, references, and external sources",
