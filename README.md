@@ -6,11 +6,11 @@
 [![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-listo-blue.svg)](https://www.docker.com/)
-[![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.0%20Flash-orange.svg)](https://ai.google.dev/)
+[![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.5%20Flash-orange.svg)](https://ai.google.dev/)
 [![DSPy](https://img.shields.io/badge/DSPy-v2.5.0-green.svg)](https://dspy.ai/)
 [![Versión](https://img.shields.io/badge/versión-v2.1.0-blue.svg)](https://github.com/karimtouma/estimate)
 
-**Estimador v2.1.0** es una plataforma sofisticada impulsada por IA que revoluciona la forma en que los profesionales de la construcción analizan documentos técnicos. Aprovechando el modelo Gemini 2.0 Flash de Google con integración DSPy para detección de alucinaciones, transforma planos complejos, planes arquitectónicos y dibujos de ingeniería en informes de inteligencia estructurados y completos con una precisión sin precedentes.
+**Estimador v2.1.0** es una plataforma impulsada por IA para el análisis de documentos técnicos de construcción. Utiliza el modelo Gemini 2.5 Flash de Google con integración DSPy para detección de alucinaciones, procesando planos, planes arquitectónicos y dibujos de ingeniería en informes estructurados en formato JSON.
 
 ## 🎯 Características Clave
 
@@ -172,7 +172,7 @@ graph TD
 
 ### **El Pipeline de Inteligencia Estimador v2.0**
 
-Nuestro sistema de IA avanzado procesa documentos de construcción a través de una **arquitectura optimizada de 5 fases** con descubrimiento inteligente y procesamiento por lotes:
+El sistema procesa documentos de construcción a través de una arquitectura de 5 fases con descubrimiento de contenido y procesamiento por lotes:
 
 ```mermaid
 graph LR
@@ -209,15 +209,15 @@ graph LR
 <details>
 <summary><strong>🎯 Detección de Alucinaciones Impulsada por DSPy (NUEVO v2.1.0)</strong></summary>
 
-**Detección de alucinaciones inteligente y type-safe usando el framework DSPy**
+**Detección de alucinaciones type-safe usando el framework DSPy**
 - **Firmas Tipadas**: Detección fuertemente tipada con puntuaciones de confianza
-- **Razonamiento Chain-of-Thought**: Razonamiento de IA avanzado para detección consciente del contexto
+- **Razonamiento Chain-of-Thought**: Razonamiento paso a paso para detección contextual
 - **Limpieza Inteligente**: Preserva contenido válido mientras elimina alucinaciones
 - **Validación Específica por Campo**: Límites y reglas personalizados por campo de datos
 - **Sistema de Respaldo**: Sistema robusto basado en regex cuando DSPy no está disponible
 
 ```python
-# Firmas DSPy para detección inteligente
+# Firmas DSPy para detección
 class DetectRepetitiveHallucination(dspy.Signature):
     text: str = dspy.InputField(desc="Texto a analizar")
     has_repetition: bool = dspy.OutputField(desc="Alucinación detectada")
@@ -245,12 +245,12 @@ has_hallucination, cleaned_text = detector.detect_and_clean(text)
 <details>
 <summary><strong>🔍 Sistema de Descubrimiento Adaptativo (FASE 1)</strong></summary>
 
-**Exploración revolucionaria de documentos sin preconcepciones**
+**Exploración de documentos sin taxonomías predefinidas**
 - **Caché Inteligente**: Pre-carga páginas críticas (primera, última, media) para acceso instantáneo
 - **Muestreo Adaptativo**: Analiza un subconjunto representativo de páginas del documento
 - **Cobertura Adaptativa**: Ajusta el número de páginas analizadas según el tamaño del documento
 - **Procesamiento por Lotes**: Agrupa múltiples consultas en llamadas API únicas
-- **Reconocimiento de Patrones**: Identificación inteligente de estructura de documento y nomenclatura
+- **Reconocimiento de Patrones**: Identificación de estructura de documento y nomenclatura
 
 **Beneficio**: Reduce el tiempo total de procesamiento al explorar el documento de manera más eficiente
 
@@ -264,7 +264,7 @@ has_hallucination, cleaned_text = detector.detect_and_clean(text)
 
 **Utilización optimizada de API con procesamiento paralelo**
 - **Optimización Multi-turno**: 8 preguntas procesadas en 1 llamada API vs. 8 llamadas secuenciales
-- **Limitación de Velocidad**: Control de concurrencia inteligente basado en semáforos
+- **Limitación de Velocidad**: Control de concurrencia basado en semáforos
 - **Sistemas de Respaldo**: Degradación automática a procesamiento secuencial si falla el lote
 - **Resistencia a Errores**: Manejo robusto de errores con reintentos automáticos
 
@@ -277,7 +277,7 @@ has_hallucination, cleaned_text = detector.detect_and_clean(text)
 <details>
 <summary><strong>🧠 Arquitectura de Caché Inteligente</strong></summary>
 
-**Gestión inteligente de páginas para rendimiento óptimo**
+**Gestión de páginas para optimización de rendimiento**
 - **Estrategia de Pre-caché**: Páginas críticas cargadas durante inicialización
 - **Puntuación de Complejidad**: Cálculo de complejidad visual con caché
 - **Optimización de Memoria**: Gestión eficiente de caché con seguimiento de metadatos
@@ -294,7 +294,7 @@ has_hallucination, cleaned_text = detector.detect_and_clean(text)
 - **Análisis Completo**: Procesa todas las páginas del documento según configuración
 - **Categorización Inteligente**: Mapea cada página a temas principales del análisis general
 - **Lotes Inteligentes**: Procesa 5 páginas por llamada API para eficiencia óptima
-- **Procesamiento Paralelo**: 2 lotes concurrentes con limitación inteligente de velocidad
+- **Procesamiento Paralelo**: 2 lotes concurrentes con limitación de velocidad
 - **Metadatos Ricos**: Resúmenes de página, elementos clave, puntuaciones de complejidad, niveles de confianza
 - **Análisis de Cobertura**: Distribución y análisis de alcance para cada categoría de tema
 
@@ -437,7 +437,7 @@ El comportamiento del análisis se controla por `config.toml`:
 # Controla qué fases de análisis se ejecutan
 enabled_types = ["general", "sections", "data_extraction"]
 
-# Sistema de optimización inteligente GEPA/DSPy
+# Sistema de optimización GEPA/DSPy
 enable_dspy_optimization = true
 auto_gepa_optimization = true
 min_analyses_for_gepa = 5
@@ -545,7 +545,7 @@ DEBUG=false
 
 ```toml
 [api]
-default_model = "gemini-2.5-pro"        # 🤖 Selección de modelo IA
+default_model = "gemini-2.5-flash"      # 🤖 Modelo de IA utilizado
 output_language = "spanish"             # 🌐 Idioma de salida
 force_spanish_output = true             # 🎯 Consistencia de idioma
 
@@ -609,7 +609,7 @@ Estimador genera **inteligencia estructurada lista para producción** en formato
   "metadata": {
     "timestamp": 1757567682.55,
     "processor_version": "2.0.0",
-    "model_used": "gemini-2.5-pro",
+    "model_used": "gemini-2.5-flash",
     "environment": "contenedor"
   }
 }
@@ -638,18 +638,18 @@ El sistema analiza cualquier dibujo técnico o plano:
 - **Detección de Alucinaciones:** <100ms por campo (impulsado por DSPy)
 
 ### Optimización de Uso de API (v2.1.0)
-- **Modelo Usado:** Gemini-2.0-Flash-Exp (rápido y preciso)
+- **Modelo Usado:** Gemini-2.5-Flash
 - **Límite de Tamaño de Archivo:** 50MB por PDF
 - **Procesamiento por Lotes:** Múltiples operaciones en llamadas API únicas
 - **Sistema de Caché:** Reutiliza tokens y resultados cuando es posible
 - **Optimización de Costos:** Reduce gastos mediante uso eficiente de API
-- **Limitación Inteligente de Velocidad:** Control de concurrencia inteligente con semáforos
+- **Limitación de Velocidad:** Control de concurrencia con semáforos
 - **Lógica de Reintento:** Reintentos automáticos con backoff exponencial
 
 ### Características de Optimización de Costos
-- **Optimización de API**: Reduce el número total de llamadas mediante agrupación inteligente
-- **Procesamiento inteligente por lotes** para análisis multi-turno
-- **Caché inteligente** reduce operaciones redundantes
+- **Optimización de API**: Reduce el número total de llamadas mediante agrupación de consultas
+- **Procesamiento por lotes** para análisis multi-turno
+- **Sistema de caché** reduce operaciones redundantes
 - **Diseño eficiente de prompts** con respuestas JSON estructuradas
 - **Limpieza automática** de archivos cargados
 - **Procesamiento paralelo** donde es beneficioso
@@ -790,17 +790,17 @@ make job
 
 #### 🎯 **Detección de Alucinaciones Impulsada por DSPy**
 - **NUEVO**: Framework DSPy integrado para detección de alucinaciones type-safe
-- **Razonamiento Chain-of-Thought** para análisis inteligente de texto
+- **Razonamiento Chain-of-Thought** para análisis paso a paso de texto
 - **Detección efectiva** de patrones repetitivos y contenido inconsistente
 - **Firmas tipadas** con puntuación de confianza
-- **Preservación inteligente** de contenido válido durante limpieza
+- **Preservación selectiva** de contenido válido durante limpieza
 - **Sistema de respaldo** con mecanismos de recuperación automática
 
 #### 📊 **Estadísticas API Mejoradas y Monitoreo**
 - **Seguimiento completo de tokens**: Tokens de entrada, salida y caché
 - **Estimación de costos**: Cálculo de costos en tiempo real por documento
 - **Métricas de rendimiento**: Tiempo de procesamiento por llamada API
-- **Sistema de caché**: Implementa reutilización inteligente de tokens
+- **Sistema de caché**: Implementa reutilización de tokens
 - **Desglose detallado**: Estadísticas por tipo de llamada API
 
 #### 🔧 **Correcciones de Errores y Mejoras**
@@ -818,14 +818,14 @@ make job
 - **Cobertura mejorada**: Análisis más extenso del contenido del documento
 
 #### 🔍 **Nuevo: Sistema de Descubrimiento Adaptativo**
-- Exploración inteligente de documentos sin taxonomías predefinidas
-- Caché inteligente con páginas críticas pre-cargadas
+- Exploración de documentos sin taxonomías predefinidas
+- Sistema de caché con páginas críticas pre-cargadas
 - Muestreo exhaustivo basado en tamaño de documento
 - Una llamada API por lotes reemplaza 10+ llamadas secuenciales
 
 #### ⚡ **Procesamiento Inteligente por Lotes**
 - Optimización P&R multi-turno (8 preguntas → 1 llamada por lotes)
-- Limitación inteligente de velocidad con control de concurrencia basado en semáforos
+- Limitación de velocidad con control de concurrencia basado en semáforos
 - Sistemas automáticos de respaldo para procesamiento resiliente
 - Manejo mejorado de errores con backoff exponencial
 
@@ -852,7 +852,7 @@ Damos la bienvenida a contribuciones de la comunidad de tecnología de construcc
 
 1. **🍴 Fork** el repositorio
 2. **🌿 Rama** desde main (`git checkout -b feature/caracteristica-increible`)
-3. **💾 Commit** tus cambios (`git commit -m 'Agregar característica increíble'`)
+3. **💾 Commit** tus cambios (`git commit -m 'Agregar nueva característica'`)
 4. **📤 Push** a la rama (`git push origin feature/caracteristica-increible`)
 5. **🔄 Pull Request** para revisión
 
@@ -933,7 +933,7 @@ Damos la bienvenida a contribuciones de la comunidad de tecnología de construcc
 
 ## 🎯 **¿Listo para Transformar tu Análisis de Planos?**
 
-### **Comienza tu análisis inteligente de documentos de construcción hoy**
+### **Comienza tu análisis de documentos de construcción hoy**
 
 ```bash
 git clone https://github.com/karimtouma/estimate.git && cd estimate && make setup
