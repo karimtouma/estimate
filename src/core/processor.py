@@ -19,7 +19,11 @@ from ..models.schemas import (
 )
 from ..utils.file_manager import FileManager
 from ..utils.logging_config import setup_logging
-from ..utils.hallucination_detector import validate_comprehensive_result, validate_data_extraction
+from ..utils.dspy_hallucination_detector import (
+    initialize_dspy_gemini,
+    validate_data_extraction_with_dspy,
+    validate_page_classification
+)
 
 # Import the new discovery system (FASE 1)
 try:
@@ -79,6 +83,14 @@ class PDFProcessor:
             # Initialize state
             self.conversation_history: List[Dict[str, Any]] = []
             self._current_file_uri: Optional[str] = None
+            
+            # Initialize DSPy with Gemini for hallucination detection
+            api_key = config.gemini.api_key if hasattr(config, 'gemini') else None
+            if api_key:
+                if initialize_dspy_gemini(api_key, model="gemini-2.0-flash-exp"):
+                    logger.info("✅ DSPy initialized for typed hallucination detection")
+                else:
+                    logger.warning("⚠️ DSPy initialization failed, using fallback detection")
             
             logger.info("PDFProcessor initialized successfully")
             
@@ -926,10 +938,12 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                                     result.sections_analysis = [SectionAnalysis(**analysis_data)]
                                     logger.info("✅ Sections analysis completed in parallel")
                                 elif analysis_name == "data_extraction":
-                                    # Validate and clean data extraction for hallucinations
-                                    cleaned_data = validate_data_extraction(analysis_data)
-                                    result.data_extraction = DataExtraction(**cleaned_data)
-                                    logger.info("✅ Data extraction completed in parallel (validated for hallucinations)")
+                                    # Validate and clean data extraction for hallucinations using DSPy
+                                    validation_result = validate_data_extraction_with_dspy(analysis_data)
+                                    if validation_result.has_hallucinations:
+                                        logger.warning(f"🔴 Hallucinations detected and cleaned: {validation_result.issues_found}")
+                                    result.data_extraction = DataExtraction(**validation_result.cleaned_data)
+                                    logger.info("✅ Data extraction completed in parallel (validated with DSPy)")
                                     
                             except Exception as e:
                                 logger.error(f"❌ {analysis_name} analysis failed in parallel execution: {e}")
@@ -949,9 +963,11 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                             elif analysis_name == "sections":
                                 result.sections_analysis = [SectionAnalysis(**analysis_data)]
                             elif analysis_name == "data_extraction":
-                                # Validate and clean data extraction for hallucinations
-                                cleaned_data = validate_data_extraction(analysis_data)
-                                result.data_extraction = DataExtraction(**cleaned_data)
+                                # Validate and clean data extraction for hallucinations using DSPy
+                                validation_result = validate_data_extraction_with_dspy(analysis_data)
+                                if validation_result.has_hallucinations:
+                                    logger.warning(f"🔴 Hallucinations detected: {validation_result.issues_found}")
+                                result.data_extraction = DataExtraction(**validation_result.cleaned_data)
                                 
                         except Exception as e:
                             logger.error(f"❌ {analysis_name} analysis failed: {e}")

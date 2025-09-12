@@ -890,7 +890,16 @@ class DynamicPlanoDiscovery:
                 result = json.loads(response)
                 classifications = result.get("page_classifications", [])
                 
-                # Enhance with cached complexity scores and ensure required fields
+                # Import DSPy validator if available
+                try:
+                    from ..utils.dspy_hallucination_detector import validate_page_classification
+                    use_dspy = True
+                except ImportError:
+                    logger.warning("DSPy validator not available, using basic validation")
+                    use_dspy = False
+                
+                # Enhance with cached complexity scores and validate
+                validated_classifications = []
                 for classification in classifications:
                     page_num = classification.get("page_number", 1) - 1  # Convert to 0-indexed
                     if 0 <= page_num < self.total_pages:
@@ -899,8 +908,14 @@ class DynamicPlanoDiscovery:
                     # Ensure confidence field exists (default to 0.8 if missing)
                     if "confidence" not in classification:
                         classification["confidence"] = 0.8
+                    
+                    # Validate with DSPy if available
+                    if use_dspy:
+                        classification = validate_page_classification(classification)
+                    
+                    validated_classifications.append(classification)
                 
-                return classifications
+                return validated_classifications
                 
             except json.JSONDecodeError:
                 logger.warning(f"Failed to parse page classification response for batch {batch_pages}")
