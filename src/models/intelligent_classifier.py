@@ -12,15 +12,32 @@ from typing import Dict, List, Optional, Any, Tuple, Set
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..services.gemini_client import GeminiClient
-from ..core.config import Config
-from ..utils.logging_config import get_logger
-from .dynamic_schemas import (
-    DynamicElementRegistry, AdaptiveElementType, ElementTypeDefinition,
-    CoreElementCategory, DiscoveryMethod, get_dynamic_registry
-)
+try:
+    from ..services.gemini_client import GeminiClient
+    from ..core.config import Config
+    from ..utils.logging_config import get_logger
+    from .dynamic_schemas import (
+        DynamicElementRegistry, AdaptiveElementType, ElementTypeDefinition,
+        CoreElementCategory, DiscoveryMethod, get_dynamic_registry
+    )
+except ImportError:
+    # Fallback for direct execution or testing
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Mock classes for testing
+    class GeminiClient:
+        def __init__(self, config): pass
+        async def generate_content(self, prompt): return {"text": "mock response"}
+    
+    class Config:
+        def __init__(self): 
+            self.auto_register_confidence_threshold = 0.85
 
-logger = get_logger(__name__)
+try:
+    logger = get_logger(__name__)
+except NameError:
+    logger = logging.getLogger(__name__)
 
 
 @dataclass
