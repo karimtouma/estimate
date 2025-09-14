@@ -172,7 +172,8 @@ class PDFProcessor:
     def analyze_document(
         self,
         file_uri: str,
-        analysis_type: Union[str, AnalysisType] = AnalysisType.GENERAL
+        analysis_type: Union[str, AnalysisType] = AnalysisType.GENERAL,
+        discovery_result: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Perform structured document analysis.
@@ -196,8 +197,8 @@ class PDFProcessor:
         logger.info(f"Starting {analysis_type.value} analysis")
         
         try:
-            # Get analysis configuration
-            prompt, schema = self._get_analysis_config(analysis_type)
+            # Get analysis configuration (adaptive if discovery_result available)
+            prompt, schema = self._get_analysis_config(analysis_type, discovery_result)
             
             # Generate content
             response_text = self.gemini_client.generate_content(
@@ -224,7 +225,7 @@ class PDFProcessor:
             logger.error(f"Analysis failed for type {analysis_type.value}: {e}")
             raise ProcessorError(f"Analysis failed: {e}") from e
     
-    def _get_analysis_config(self, analysis_type: AnalysisType) -> tuple[str, Dict[str, Any]]:
+    def _get_analysis_config(self, analysis_type: AnalysisType, discovery_result: Optional[Dict[str, Any]] = None) -> tuple[str, Dict[str, Any]]:
         """
         Get prompt and schema for analysis type with GEPA optimization.
         
@@ -254,6 +255,12 @@ class PDFProcessor:
             logger.info(f"Using GEPA-optimized prompt for {analysis_type.value}")
             return optimized_prompt, self._get_schema(analysis_type)
         
+        # Create adaptive prompts based on discovery results
+        if discovery_result:
+            adaptive_prompt = self._create_adaptive_prompt(analysis_type, discovery_result, language_instruction)
+            logger.info(f"Using adaptive prompt for {analysis_type.value} based on discovery: {discovery_result.get('document_type', 'unknown')}")
+            return adaptive_prompt, self._get_schema(analysis_type)
+        
         logger.debug(f"Using baseline prompt for {analysis_type.value}")
         
         prompts = {
@@ -267,7 +274,7 @@ class PDFProcessor:
             4. The identified document type
             5. Your confidence level in the analysis
             
-            Be precise, objective and structured in your response. Focus on technical, architectural, structural, mechanical, electrical, and civil engineering aspects if applicable.
+            Be precise, objective and structured in your response. Adapt your analysis to the specific type and domain of this document.
             """,
             
             AnalysisType.SECTIONS: f"""
@@ -281,7 +288,7 @@ class PDFProcessor:
             - Questions or concerns arising from the content
             - Section type if identifiable
             
-            Focus on technical drawings, specifications, and engineering details.
+            Focus on the content type and domain specific to this document.
             """,
             
             AnalysisType.DATA_EXTRACTION: f"""
@@ -298,7 +305,7 @@ class PDFProcessor:
             - Each item must be unique and concise
             - No repetitions or variations of the same item
             - Extract only the most relevant and important data
-            - For numbers, include units and context (e.g., "3,287 SF building area")
+            - Adapt extraction to the specific document type and domain
             """
         }
         
@@ -309,6 +316,124 @@ class PDFProcessor:
         }
         
         return prompts[analysis_type], schemas[analysis_type]
+    
+    def _create_adaptive_prompt(self, analysis_type: AnalysisType, discovery_result: Dict[str, Any], language_instruction: str) -> str:
+        """
+        Create adaptive prompts based on discovery results.
+        
+        Args:
+            analysis_type: Type of analysis to perform
+            discovery_result: Discovery results to adapt to
+            language_instruction: Language instruction to include
+            
+        Returns:
+            Adaptive prompt tailored to discovered document type and domain
+        """
+        document_type = discovery_result.get('document_type', 'unknown document')
+        industry_domain = discovery_result.get('industry_domain', 'unknown domain')
+        discovered_patterns = discovery_result.get('discovered_patterns', {})
+        
+        # Extract domain-specific focus areas
+        focus_areas = self._extract_focus_areas_from_discovery(discovery_result)
+        focus_instruction = f"Focus specifically on {', '.join(focus_areas)} aspects relevant to {industry_domain}." if focus_areas else f"Focus on aspects relevant to {industry_domain}."
+        
+        adaptive_prompts = {
+            AnalysisType.GENERAL: f"""
+            {language_instruction}
+            
+            Perform a comprehensive analysis of this {document_type} from the {industry_domain} domain. Provide:
+            1. A clear and concise executive summary
+            2. The main topics addressed in the document
+            3. The most important and relevant insights
+            4. The identified document type and its specific characteristics
+            5. Your confidence level in the analysis
+            
+            Be precise, objective and structured in your response. {focus_instruction}
+            """,
+            
+            AnalysisType.SECTIONS: f"""
+            {language_instruction}
+            
+            Identify and analyze the main sections of this {document_type}.
+            For each important section, provide:
+            - Section title or heading
+            - Content summary (maximum 500 characters)
+            - Important data found
+            - Questions or concerns arising from the content
+            - Section type if identifiable
+            
+            {focus_instruction} Pay attention to the specific organizational patterns discovered in this document.
+            """,
+            
+            AnalysisType.DATA_EXTRACTION: f"""
+            {language_instruction}
+            
+            Extract specific structured data from this {document_type} in the {industry_domain} domain:
+            - Entities mentioned (people, organizations, places, companies) - MAX 50 items
+            - Relevant dates and important deadlines - MAX 30 items
+            - Numbers, metrics and key statistics - MAX 40 items, each under 100 characters
+            - References, citations and external sources - MAX 25 items
+            - Technical terms and specialized vocabulary - MAX 30 items
+            
+            IMPORTANT: 
+            - Each item must be unique and concise
+            - No repetitions or variations of the same item
+            - Extract only the most relevant and important data
+            - Focus on data types specific to {industry_domain}
+            - Adapt extraction patterns to the discovered document structure
+            """
+        }
+        
+        return adaptive_prompts[analysis_type]
+    
+    def _extract_focus_areas_from_discovery(self, discovery_result: Dict[str, Any]) -> List[str]:
+        """
+        Extract focus areas from discovery results for adaptive prompts.
+        
+        Args:
+            discovery_result: Discovery analysis results
+            
+        Returns:
+            List of focus areas specific to the discovered document type
+        """
+        focus_areas = []
+        
+        document_type = discovery_result.get('document_type', '').lower()
+        industry_domain = discovery_result.get('industry_domain', '').lower()
+        discovered_patterns = discovery_result.get('discovered_patterns', {})
+        
+        # Extract focus areas based on discovered document characteristics
+        if 'construction' in document_type or 'blueprint' in document_type or 'aec' in industry_domain:
+            focus_areas.extend(['architectural', 'structural', 'mechanical', 'electrical', 'civil engineering'])
+        elif 'process' in document_type or 'p&id' in document_type or 'petrochemical' in industry_domain:
+            focus_areas.extend(['process engineering', 'instrumentation', 'piping', 'equipment'])
+        elif 'electrical' in document_type or 'schematic' in document_type:
+            focus_areas.extend(['electrical systems', 'circuit design', 'power distribution'])
+        elif 'mechanical' in document_type or 'assembly' in document_type:
+            focus_areas.extend(['mechanical design', 'assemblies', 'manufacturing'])
+        elif 'naval' in industry_domain or 'marine' in industry_domain:
+            focus_areas.extend(['naval architecture', 'marine systems', 'shipbuilding'])
+        elif 'aerospace' in industry_domain or 'aviation' in industry_domain:
+            focus_areas.extend(['aerospace engineering', 'aircraft systems', 'flight systems'])
+        
+        # Extract focus areas from discovered patterns
+        if 'patterns' in discovered_patterns:
+            patterns = discovered_patterns['patterns']
+            if isinstance(patterns, list):
+                for pattern in patterns:
+                    if isinstance(pattern, str):
+                        pattern_lower = pattern.lower()
+                        if 'hvac' in pattern_lower or 'mechanical' in pattern_lower:
+                            focus_areas.append('HVAC systems')
+                        elif 'electrical' in pattern_lower or 'power' in pattern_lower:
+                            focus_areas.append('electrical systems')
+                        elif 'plumbing' in pattern_lower or 'piping' in pattern_lower:
+                            focus_areas.append('plumbing systems')
+                        elif 'structural' in pattern_lower or 'foundation' in pattern_lower:
+                            focus_areas.append('structural systems')
+        
+        # Remove duplicates and return
+        return list(set(focus_areas))
     
     def _get_gepa_optimized_prompt(self, analysis_type: AnalysisType, language_instruction: str) -> Optional[str]:
         """
@@ -874,9 +999,17 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
             if file_uri is None:
                 file_uri = self.upload_pdf(pdf_path)
             
-            # Use default questions if none provided
+            # Generate adaptive questions if none provided
             if questions is None:
-                questions = self.config.analysis.default_questions
+                if discovery_result:
+                    # Use adaptive questions based on discovery
+                    from ..utils.adaptive_questions import generate_adaptive_questions
+                    questions = generate_adaptive_questions(discovery_result.discovery_metadata, max_questions=8)
+                    logger.info(f"Generated {len(questions)} adaptive questions based on discovery")
+                else:
+                    # Fallback to default questions
+                    questions = self.config.analysis.default_questions
+                    logger.info("Using default questions (no discovery result available)")
             
             # Initialize result
             result = ComprehensiveAnalysisResult(
@@ -921,7 +1054,7 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                         # Submit all analysis tasks
                         future_to_analysis = {}
                         for analysis_name, analysis_type in parallel_analyses:
-                            future = executor.submit(self.analyze_document, file_uri, analysis_type)
+                            future = executor.submit(self.analyze_document, file_uri, analysis_type, discovery_result.discovery_metadata if discovery_result else None)
                             future_to_analysis[future] = (analysis_name, analysis_type)
                         
                         # Collect results as they complete
@@ -956,7 +1089,7 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
                     logger.info("📋 Using SEQUENTIAL core analysis (parallel disabled or single analysis)")
                     for analysis_name, analysis_type in parallel_analyses:
                         try:
-                            analysis_data = self.analyze_document(file_uri, analysis_type)
+                            analysis_data = self.analyze_document(file_uri, analysis_type, discovery_result.discovery_metadata if discovery_result else None)
                             
                             if analysis_name == "general":
                                 result.general_analysis = DocumentAnalysis(**analysis_data)

@@ -77,6 +77,11 @@ max_error_rate = 0.2
 optimize_for_accuracy = true
 optimize_for_reliability = true
 optimize_for_efficiency = true
+# Dynamic schemas configuration
+enable_dynamic_schemas = true
+auto_register_confidence_threshold = 0.85
+enable_continuous_learning = true
+registry_persistence_path = "data/dynamic_registry.json"
 # Taxonomy configuration
 taxonomy_confidence_threshold = 0.7
 element_detection_threshold = 0.6
