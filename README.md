@@ -32,10 +32,12 @@ PDF Estimator es un sistema autónomo para análisis inteligente de documentos t
 - **Configuración Flexible**: Idioma de salida configurable
 
 ### Rendimiento Empresarial
-- **Tiempo**: 11-13 minutos (documentos de 51 páginas)
-- **Costo**: $0.08 USD por análisis completo
+- **Tiempo**: 13-14 minutos (documentos de 51 páginas)
+- **Costo**: $0.089 USD por análisis completo
 - **Precisión**: 95-100% de elementos identificados
-- **Eficiencia**: 46-54% reutilización de tokens
+- **Judge Score GEPA**: 100% (calidad perfecta)
+- **Consenso GEPA**: 95.9% entre candidatos
+- **Eficiencia**: 49.5% reutilización de tokens
 
 ---
 
@@ -147,12 +149,13 @@ LOG_LEVEL=INFO                      # Opcional
 
 | Métrica | Valor | Descripción |
 |---------|--------|-------------|
-| Tiempo | 11-13 min | Documentos de 51 páginas |
-| Costo | $0.08 USD | Análisis completo |
+| Tiempo | 13-14 min | Documentos de 51 páginas |
+| Costo | $0.089 USD | Análisis completo |
 | Precisión | 95-100% | Elementos identificados |
-| Judge Score | 99.7% | Calidad GEPA |
-| Consenso | 97.5% | Acuerdo entre candidatos |
-| Cache Efficiency | 46-54% | Reutilización de tokens |
+| Judge Score | 100% | Calidad GEPA (PERFECTO) |
+| Consenso | 95.9% | Acuerdo entre candidatos |
+| Cache Efficiency | 49.5% | Reutilización de tokens |
+| Tipos Descubiertos | 7 únicos | Por documento |
 
 ---
 

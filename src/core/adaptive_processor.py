@@ -258,7 +258,7 @@ class AdaptiveProcessor(PDFProcessor):
         pdf_path: Union[str, Path],
         questions: Optional[List[str]] = None,
         enable_discovery: bool = True
-    ) -> ComprehensiveAnalysisResult:
+    ) -> 'ComprehensiveAnalysisResult':
         """
         Perform fully adaptive comprehensive analysis.
         

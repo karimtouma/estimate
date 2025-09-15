@@ -13,6 +13,12 @@ gepa>=0.0.12,<1.0.0
 # PDF processing
 PyMuPDF>=1.24.0,<2.0.0
 
+# Image processing (used by discovery system)
+Pillow>=10.4.0,<11.0.0
+
+# Numerical computing (used by discovery system)
+numpy>=1.24.0,<2.0.0
+
 # Data validation and serialization
 pydantic>=2.11.0,<3.0.0
 
