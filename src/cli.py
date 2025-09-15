@@ -11,7 +11,9 @@ from typing import Optional, List
 import json
 
 from .core.config import get_config, Config
-from .core.processor import PDFProcessor, ProcessorError
+from .core.processor import PDFProcessor
+from .core.adaptive_processor import AdaptiveProcessor
+from .core.processor import ProcessorError
 from .models.schemas import AnalysisType
 
 
@@ -94,11 +96,33 @@ def analyze(
         click.echo(f"🔍 Analysis type: {analysis_type}")
     
     try:
-        with PDFProcessor(config) as processor:
+        # Choose processor based on dynamic schemas configuration
+        enable_dynamic_schemas = getattr(config, 'enable_dynamic_schemas', False)
+        if hasattr(config, 'analysis') and hasattr(config.analysis, 'enable_dynamic_schemas'):
+            enable_dynamic_schemas = config.analysis.enable_dynamic_schemas
+        
+        # Debug logging
+        click.echo(f"🔍 Debug: enable_dynamic_schemas = {enable_dynamic_schemas}")
+        click.echo(f"🔍 Debug: config has analysis = {hasattr(config, 'analysis')}")
+        if hasattr(config, 'analysis'):
+            click.echo(f"🔍 Debug: analysis.enable_dynamic_schemas = {getattr(config.analysis, 'enable_dynamic_schemas', 'NOT_FOUND')}")
+        
+        processor_class = AdaptiveProcessor if enable_dynamic_schemas else PDFProcessor
+        processor_name = "Adaptive" if enable_dynamic_schemas else "Standard"
+        
+        click.echo(f"🧠 Using {processor_name} Processor (dynamic schemas: {'enabled' if enable_dynamic_schemas else 'disabled'})")
+        
+        with processor_class(config) as processor:
             if analysis_type == "comprehensive":
                 # Comprehensive analysis
                 questions_list = list(questions) if questions else None
-                result = processor.comprehensive_analysis(pdf_path, questions_list)
+                
+                if enable_dynamic_schemas:
+                    # Use fully adaptive analysis
+                    result = processor.comprehensive_analysis_adaptive(pdf_path, questions_list)
+                else:
+                    # Use standard analysis
+                    result = processor.comprehensive_analysis(pdf_path, questions_list)
                 
                 # Generate output filename if not provided
                 if not output:

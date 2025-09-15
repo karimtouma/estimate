@@ -20,10 +20,13 @@ try:
         DynamicElementRegistry, AdaptiveElementType, ElementTypeDefinition,
         CoreElementCategory, DiscoveryMethod, get_dynamic_registry
     )
+    from ..optimization.gepa_classification_enhancer import create_gepa_classification_enhancer
+    GEPA_ENHANCER_AVAILABLE = True
 except ImportError:
     # Fallback for direct execution or testing
     import logging
     logger = logging.getLogger(__name__)
+    GEPA_ENHANCER_AVAILABLE = False
     
     # Mock classes for testing
     class GeminiClient:
@@ -98,10 +101,19 @@ class IntelligentTypeClassifier:
             self._classify_by_ai_reasoning
         ]
         
+        # Initialize GEPA classification enhancer for always-on improvement
+        if GEPA_ENHANCER_AVAILABLE:
+            self.gepa_enhancer = create_gepa_classification_enhancer(config, self.gemini_client)
+            logger.info("GEPA classification enhancer initialized - ALWAYS ACTIVE")
+        else:
+            self.gepa_enhancer = None
+            logger.warning("GEPA enhancer not available - using standard classification")
+        
         # Performance tracking
         self.classification_count = 0
         self.discovery_count = 0
         self.accuracy_history = []
+        self.gepa_enhancement_count = 0
         
         logger.info("IntelligentTypeClassifier initialized")
     
@@ -150,9 +162,25 @@ class IntelligentTypeClassifier:
                     logger.warning(f"Classification strategy {strategy.__name__} failed: {e}")
                     continue
             
-            # If no result, create fallback classification
+            # If no result, create fallback classification using AI reasoning
             if best_result is None:
-                best_result = self._create_fallback_classification(element_info)
+                best_result = await self._create_fallback_classification(element_info)
+            
+            # ALWAYS enhance with GEPA using multiple candidates and judge
+            if self.gepa_enhancer:
+                logger.debug("🧬 GEPA: Always enhancing classification with multiple candidates...")
+                
+                gepa_result = await self.gepa_enhancer.enhance_classification(
+                    element_info=element_info,
+                    context=context,
+                    base_classification=best_result
+                )
+                
+                # Use GEPA-enhanced result
+                best_result = gepa_result.get_classification_result()
+                self.gepa_enhancement_count += 1
+                
+                logger.debug(f"🧬 GEPA enhanced: {best_result.classified_type} (consensus: {gepa_result.consensus_score:.3f})")
             
             # Enhance result with ensemble information
             if len(all_results) > 1:
@@ -359,14 +387,17 @@ class IntelligentTypeClassifier:
             # Create comprehensive analysis prompt
             prompt = self._create_ai_classification_prompt(element_info, context)
             
-            # Get AI analysis
-            response = await self.gemini_client.generate_content(prompt)
+            # Get AI analysis using text-only method
+            response_text = self.gemini_client.generate_text_only_content(
+                prompt=prompt,
+                response_schema=self._get_classification_schema()
+            )
             
-            if not response or not response.get('text'):
+            if not response_text:
                 return None
             
             # Parse AI response
-            ai_result = self._parse_ai_classification_response(response['text'])
+            ai_result = self._parse_ai_classification_response(response_text)
             
             if ai_result and ai_result['confidence'] >= 0.5:
                 return ClassificationResult(
@@ -612,6 +643,42 @@ class IntelligentTypeClassifier:
         
         return prompt
     
+    def _get_classification_schema(self) -> Dict[str, Any]:
+        """Get JSON schema for AI classification response."""
+        return {
+            "type": "object",
+            "properties": {
+                "type_name": {
+                    "type": "string",
+                    "description": "Specific element type name"
+                },
+                "category": {
+                    "type": "string",
+                    "enum": ["structural", "architectural", "mep", "annotation", "specialized"],
+                    "description": "Core category classification"
+                },
+                "confidence": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "Classification confidence score"
+                },
+                "reasoning": {
+                    "type": "string",
+                    "description": "Brief explanation of classification logic"
+                },
+                "domain_context": {
+                    "type": "string",
+                    "description": "Domain context (residential, commercial, industrial, etc.)"
+                },
+                "industry_context": {
+                    "type": "string",
+                    "description": "Industry context (construction, petrochemical, aerospace, etc.)"
+                }
+            },
+            "required": ["type_name", "category", "confidence"]
+        }
+    
     def _parse_ai_classification_response(self, response_text: str) -> Optional[Dict[str, Any]]:
         """Parse AI classification response."""
         try:
@@ -644,36 +711,80 @@ class IntelligentTypeClassifier:
             logger.warning(f"Failed to parse AI classification response: {e}")
             return None
     
-    def _create_fallback_classification(self, element_info: Dict[str, Any]) -> ClassificationResult:
-        """Create fallback classification when all strategies fail."""
+    async def _create_fallback_classification(self, element_info: Dict[str, Any]) -> ClassificationResult:
+        """Create fallback classification using pure AI reasoning when all strategies fail."""
         
-        # Try to infer category from available information
-        text_content = element_info.get('text_content', '').lower()
+        try:
+            # Create a simplified AI reasoning prompt for fallback
+            fallback_prompt = self._create_fallback_ai_prompt(element_info)
+            
+            # Use AI reasoning even for fallback
+            response_text = self.gemini_client.generate_text_only_content(
+                prompt=fallback_prompt,
+                response_schema=self._get_classification_schema()
+            )
+            
+            if response_text:
+                ai_result = self._parse_ai_classification_response(response_text)
+                if ai_result:
+                    return ClassificationResult(
+                        classified_type=ai_result['type_name'],
+                        base_category=CoreElementCategory(ai_result['category']),
+                        confidence=max(0.3, ai_result['confidence'] * 0.7),  # Reduced confidence for fallback
+                        discovery_method=DiscoveryMethod.AI_CLASSIFICATION,
+                        reasoning=f"Fallback AI reasoning: {ai_result.get('reasoning', 'AI fallback classification')}",
+                        evidence_used=['fallback_ai_analysis'],
+                        requires_validation=True
+                    )
         
-        if any(word in text_content for word in ['beam', 'column', 'foundation', 'structural']):
-            category = CoreElementCategory.STRUCTURAL
-            type_name = "structural_element"
-        elif any(word in text_content for word in ['wall', 'door', 'window', 'room']):
-            category = CoreElementCategory.ARCHITECTURAL
-            type_name = "architectural_element"
-        elif any(word in text_content for word in ['electrical', 'hvac', 'plumbing', 'mechanical']):
-            category = CoreElementCategory.MEP
-            type_name = "mep_element"
-        elif any(word in text_content for word in ['dimension', 'note', 'label', 'text']):
-            category = CoreElementCategory.ANNOTATION
-            type_name = "annotation_element"
-        else:
-            category = CoreElementCategory.SPECIALIZED
-            type_name = "unknown_element"
+        except Exception as e:
+            logger.warning(f"Fallback AI classification failed: {e}")
         
+        # Ultimate fallback - use generic classification without keywords
         return ClassificationResult(
-            classified_type=type_name,
-            base_category=category,
-            confidence=0.3,  # Low confidence for fallback
+            classified_type="unclassified_element",
+            base_category=CoreElementCategory.SPECIALIZED,
+            confidence=0.1,  # Very low confidence
             discovery_method=DiscoveryMethod.PATTERN_ANALYSIS,
-            reasoning="Fallback classification based on text content",
+            reasoning="Ultimate fallback - insufficient information for classification",
             requires_validation=True
         )
+    
+    def _create_fallback_ai_prompt(self, element_info: Dict[str, Any]) -> str:
+        """Create a simplified AI prompt for fallback classification."""
+        
+        text_content = element_info.get('text_content', 'No text available')
+        visual_features = element_info.get('visual_features', {})
+        location = element_info.get('location', {})
+        
+        prompt = f"""
+        SIMPLIFIED ELEMENT CLASSIFICATION
+        
+        Analyze this element with limited information available:
+        
+        TEXT CONTENT: {text_content[:200]}
+        VISUAL FEATURES: {visual_features}
+        LOCATION: {location}
+        
+        Based on this limited information, classify this element into one of these categories:
+        - structural: load-bearing elements, support systems
+        - architectural: building envelope, spaces, aesthetic elements  
+        - mep: mechanical, electrical, plumbing systems
+        - annotation: text, labels, dimensions, notes
+        - specialized: industry-specific or unique elements
+        
+        Provide your best analysis even with limited information.
+        
+        RESPONSE FORMAT (JSON):
+        {{
+            "type_name": "specific_element_type",
+            "category": "structural|architectural|mep|annotation|specialized",
+            "confidence": 0.5,
+            "reasoning": "Brief explanation based on available evidence"
+        }}
+        """
+        
+        return prompt
     
     def _enhance_with_ensemble(
         self, 
@@ -744,10 +855,21 @@ class IntelligentTypeClassifier:
     
     def get_classification_stats(self) -> Dict[str, Any]:
         """Get classifier performance statistics."""
-        return {
+        stats = {
             "total_classifications": self.classification_count,
             "discoveries_made": self.discovery_count,
             "discovery_rate": self.discovery_count / max(1, self.classification_count),
             "average_accuracy": sum(self.accuracy_history) / max(1, len(self.accuracy_history)),
             "registry_size": len(self.registry.discovered_types)
         }
+        
+        # Add GEPA enhancement statistics
+        if self.gepa_enhancer:
+            gepa_stats = self.gepa_enhancer.get_enhancement_statistics()
+            stats.update({
+                "gepa_enhancements": self.gepa_enhancement_count,
+                "gepa_enhancement_rate": self.gepa_enhancement_count / max(1, self.classification_count),
+                "gepa_statistics": gepa_stats
+            })
+        
+        return stats

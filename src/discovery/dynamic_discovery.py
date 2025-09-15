@@ -22,6 +22,12 @@ from ..utils.logging_config import get_logger
 from .pattern_analyzer import PatternAnalyzer
 from .nomenclature_parser import NomenclatureParser
 
+try:
+    from ..optimization.pattern_extraction_gepa import create_pattern_extraction_gepa
+    GEPA_AVAILABLE = True
+except ImportError:
+    GEPA_AVAILABLE = False
+
 logger = get_logger(__name__)
 
 
@@ -55,10 +61,19 @@ class DynamicPlanoDiscovery:
         self.pattern_analyzer = PatternAnalyzer(gemini_client=self.gemini_client)
         self.nomenclature_parser = NomenclatureParser(gemini_client=self.gemini_client)
         
+        # Initialize GEPA for prompt evolution
+        if GEPA_AVAILABLE:
+            self.gepa_optimizer = create_pattern_extraction_gepa(config, self.gemini_client)
+            logger.info("GEPA pattern extraction optimizer initialized")
+        else:
+            self.gepa_optimizer = None
+            logger.warning("GEPA not available - using static prompts")
+        
         # Discovery state
         self.discovered_ontology = {}
         self.page_fingerprints = []
         self.emergent_patterns = {}
+        self.discovery_history = []  # For GEPA evolution
         
         # INTELLIGENT CACHING SYSTEM
         self.page_cache = {}  # Cache for page text and metadata
@@ -73,6 +88,172 @@ class DynamicPlanoDiscovery:
         self._initialize_smart_cache()
         
         logger.info(f"DynamicPlanoDiscovery initialized for: {pdf_path}")
+    
+    async def evolve_extraction_prompts(self, target_domain: str = "construction_documents") -> bool:
+        """
+        Evolve pattern extraction prompts using GEPA based on discovery history.
+        
+        Args:
+            target_domain: Target domain for prompt specialization
+            
+        Returns:
+            True if evolution was successful
+        """
+        if not self.gepa_optimizer or not self.discovery_history:
+            logger.info("GEPA evolution skipped - insufficient data or GEPA not available")
+            return False
+        
+        logger.info(f"🧬 Starting GEPA evolution for {target_domain} pattern extraction prompts...")
+        
+        try:
+            # Use discovery history as sample documents for evolution
+            evolution_results = await self.gepa_optimizer.evolve_pattern_extraction_prompts(
+                base_prompts=self._get_base_extraction_prompts(),
+                target_domain=target_domain,
+                sample_documents=self.discovery_history[-5:],  # Use last 5 discoveries
+                target_improvement=0.15
+            )
+            
+            # Update prompts with evolved versions
+            self._update_extraction_prompts(evolution_results)
+            
+            logger.info(f"✅ GEPA evolution complete:")
+            for prompt_type, result in evolution_results.items():
+                logger.info(f"  - {prompt_type}: {result.performance_improvement:.3f} improvement")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"GEPA evolution failed: {e}")
+            return False
+    
+    def _get_base_extraction_prompts(self) -> Dict[str, str]:
+        """Get base prompts for pattern extraction."""
+        return {
+            "pattern_discovery": """
+            Analyze these patterns found in a technical document:
+            {patterns}
+            
+            WITHOUT making any assumptions about what these patterns mean:
+            
+            1. STRUCTURAL PATTERNS
+               - What naming structures do you observe?
+               - Are there consistent formats or templates?
+               - What separators or delimiters are used?
+            
+            2. SEQUENCES & NUMBERING
+               - Are there sequential patterns?
+               - What numbering systems appear?
+               - Are there hierarchical structures?
+            
+            3. GROUPINGS & RELATIONSHIPS
+               - Which patterns seem related?
+               - Are there parent-child relationships?
+               - What natural groupings emerge?
+            
+            Return a structured analysis of discovered rules.
+            """,
+            
+            "nomenclature_parsing": """
+            Analyze these codes found in a technical document:
+            {codes}
+            
+            WITHOUT assuming these are engineering codes or any specific domain:
+            
+            1. PATTERN DISCOVERY
+               - What consistent patterns do you observe?
+               - What are the structural components (letters, numbers, separators)?
+               - Are there templates or formats being followed?
+            
+            2. SYSTEM ANALYSIS
+               - Is there a systematic naming convention?
+               - What rules govern the code formation?
+               - Are there hierarchies or categories?
+            
+            Return a structured analysis of the nomenclature system.
+            """,
+            
+            "element_classification": """
+            Classify this element based on its characteristics:
+            
+            TEXT CONTENT: {text_content}
+            VISUAL FEATURES: {visual_features}
+            LOCATION: {location}
+            
+            Based on this information, classify this element into one of these categories:
+            - structural: load-bearing elements, support systems
+            - architectural: building envelope, spaces, aesthetic elements  
+            - mep: mechanical, electrical, plumbing systems
+            - annotation: text, labels, dimensions, notes
+            - specialized: industry-specific or unique elements
+            
+            Provide specific type classification with confidence and reasoning.
+            """
+        }
+    
+    def _update_extraction_prompts(self, evolution_results: Dict[str, Any]) -> None:
+        """Update extraction prompts with evolved versions."""
+        
+        # Update pattern analyzer prompts
+        if "pattern_discovery" in evolution_results:
+            evolved_prompt = evolution_results["pattern_discovery"].evolved_prompt
+            if hasattr(self.pattern_analyzer, 'update_discovery_prompt'):
+                self.pattern_analyzer.update_discovery_prompt(evolved_prompt)
+        
+        # Update nomenclature parser prompts  
+        if "nomenclature_parsing" in evolution_results:
+            evolved_prompt = evolution_results["nomenclature_parsing"].evolved_prompt
+            if hasattr(self.nomenclature_parser, 'update_parsing_prompt'):
+                self.nomenclature_parser.update_parsing_prompt(evolved_prompt)
+        
+        logger.info("Extraction prompts updated with GEPA evolution results")
+    
+    def _record_discovery_for_gepa(self, discovery_result: Dict[str, Any]) -> None:
+        """Record discovery result for GEPA evolution."""
+        
+        # Add to discovery history for GEPA learning
+        discovery_record = {
+            "timestamp": time.time(),
+            "document_type": discovery_result.get("document_type"),
+            "patterns_found": discovery_result.get("discovered_patterns", []),
+            "nomenclature_codes": discovery_result.get("nomenclature_system", {}),
+            "confidence_score": discovery_result.get("confidence_score", 0.0),
+            "processing_time": discovery_result.get("processing_time", 0.0)
+        }
+        
+        self.discovery_history.append(discovery_record)
+        
+        # Keep only last 20 discoveries for efficiency
+        if len(self.discovery_history) > 20:
+            self.discovery_history = self.discovery_history[-20:]
+        
+        logger.debug(f"Discovery recorded for GEPA evolution: {len(self.discovery_history)} total records")
+    
+    async def _trigger_gepa_evolution_background(self, industry_domain: str) -> None:
+        """Trigger GEPA evolution in background."""
+        
+        try:
+            # Map industry domain to GEPA target domain
+            domain_mapping = {
+                "Architecture, Engineering, and Construction (AEC)": "construction_documents",
+                "Process Engineering": "process_schematics", 
+                "Electrical Engineering": "electrical_diagrams",
+                "Mechanical Engineering": "mechanical_drawings",
+                "Civil Engineering": "civil_plans"
+            }
+            
+            target_domain = domain_mapping.get(industry_domain, "construction_documents")
+            
+            # Run evolution
+            success = await self.evolve_extraction_prompts(target_domain)
+            
+            if success:
+                logger.info(f"🧬 Background GEPA evolution completed for {target_domain}")
+            else:
+                logger.warning(f"Background GEPA evolution failed for {target_domain}")
+                
+        except Exception as e:
+            logger.error(f"Background GEPA evolution error: {e}")
     
     def _open_pdf(self):
         """Open the PDF document for analysis."""
@@ -244,6 +425,38 @@ class DynamicPlanoDiscovery:
             result = await self._analyze_pages_parallel(sample_pages, exploration_prompt)
         
         logger.info(f"Initial exploration complete. Document type: {result.document_type}")
+        
+        # Record discovery for GEPA evolution
+        discovery_dict = {
+            "document_type": result.document_type,
+            "industry_domain": result.industry_domain,
+            "discovered_patterns": result.discovered_patterns,
+            "nomenclature_system": result.nomenclature_system,
+            "confidence_score": result.confidence_score,
+            "processing_time": time.time() - start_time if 'start_time' in locals() else 0.0
+        }
+        self._record_discovery_for_gepa(discovery_dict)
+        
+        # Trigger GEPA evolution if enough discoveries accumulated
+        if len(self.discovery_history) >= 3:  # Minimum for meaningful evolution
+            logger.info("🧬 Sufficient discoveries accumulated - triggering GEPA prompt evolution...")
+            
+            # Run GEPA evolution in background thread to avoid event loop issues
+            import threading
+            
+            def run_gepa_evolution():
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        loop.run_until_complete(self._trigger_gepa_evolution_background(result.industry_domain))
+                    finally:
+                        loop.close()
+                except Exception as e:
+                    logger.warning(f"Background GEPA evolution failed: {e}")
+            
+            gepa_thread = threading.Thread(target=run_gepa_evolution, daemon=True)
+            gepa_thread.start()
         
         return result
     
@@ -893,9 +1106,15 @@ class DynamicPlanoDiscovery:
                 # Import DSPy validator if available
                 try:
                     from ..utils.dspy_hallucination_detector import validate_page_classification
-                    use_dspy = True
-                except ImportError:
-                    logger.warning("DSPy validator not available, using basic validation")
+                    import dspy
+                    # Check if DSPy is properly configured
+                    if hasattr(dspy.settings, 'lm') and dspy.settings.lm is not None:
+                        use_dspy = True
+                    else:
+                        logger.debug("DSPy not properly configured, skipping validation")
+                        use_dspy = False
+                except (ImportError, AttributeError) as e:
+                    logger.debug(f"DSPy validator not available: {e}")
                     use_dspy = False
                 
                 # Enhance with cached complexity scores and validate
@@ -909,9 +1128,12 @@ class DynamicPlanoDiscovery:
                     if "confidence" not in classification:
                         classification["confidence"] = 0.8
                     
-                    # Validate with DSPy if available
+                    # Validate with DSPy if available and properly configured
                     if use_dspy:
-                        classification = validate_page_classification(classification)
+                        try:
+                            classification = validate_page_classification(classification)
+                        except Exception as e:
+                            logger.debug(f"DSPy validation failed, using original: {e}")
                     
                     validated_classifications.append(classification)
                 

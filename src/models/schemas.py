@@ -105,9 +105,7 @@ class DataExtraction(BaseModel):
     )
     numbers: List[str] = Field(
         description="Important numbers, metrics, and statistics (max 100 chars each)",
-        max_items=40,
-        # Add validation to prevent hallucinations
-        examples=["3,287 SF", "79 occupants", "400A electrical service"]
+        max_items=40
     )
     references: List[str] = Field(
         description="Citations, references, and external sources",
@@ -193,6 +191,7 @@ class ComprehensiveAnalysisResult(BaseModel):
     data_extraction: Optional[DataExtraction] = None
     qa_analysis: Optional[List[QuestionAnswer]] = None
     discovery_analysis: Optional[dict] = Field(default=None, description="Discovery phase analysis results")
+    dynamic_schema_results: Optional[dict] = Field(default=None, description="Dynamic schema discovery and classification results")
     page_map: Optional[DocumentPageMap] = Field(default=None, description="Complete page-by-page analysis and categorization")
     metadata: Optional[ProcessingMetadata] = None
     

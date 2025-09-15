@@ -59,6 +59,11 @@ class AnalysisConfig:
     default_questions: List[str] = field(default_factory=list)
     save_conversation_history: bool = True
     max_history_items: int = 100
+    # Dynamic schemas configuration
+    enable_dynamic_schemas: bool = False
+    auto_register_confidence_threshold: float = 0.85
+    enable_continuous_learning: bool = True
+    registry_persistence_path: str = "data/dynamic_registry.json"
 
 
 @dataclass
@@ -188,7 +193,11 @@ class Config:
                 enabled_types=analysis_data.get('enabled_types', ["general", "sections", "data_extraction"]),
                 default_questions=analysis_data.get('default_questions', []),
                 save_conversation_history=analysis_data.get('save_conversation_history', True),
-                max_history_items=analysis_data.get('max_history_items', 100)
+                max_history_items=analysis_data.get('max_history_items', 100),
+                enable_dynamic_schemas=analysis_data.get('enable_dynamic_schemas', False),
+                auto_register_confidence_threshold=analysis_data.get('auto_register_confidence_threshold', 0.85),
+                enable_continuous_learning=analysis_data.get('enable_continuous_learning', True),
+                registry_persistence_path=analysis_data.get('registry_persistence_path', "data/dynamic_registry.json")
             )
         
         if 'output' in self._raw_data:

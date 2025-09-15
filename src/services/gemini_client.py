@@ -281,6 +281,91 @@ class GeminiClient:
             logger.error(f"Content generation failed: {e}")
             raise GeminiAPIError(f"Failed to generate content: {e}") from e
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=8),
+        retry=retry_if_exception_type((ConnectionError, TimeoutError))
+    )
+    def generate_text_only_content(
+        self,
+        prompt: str,
+        response_schema: Optional[Dict[str, Any]] = None,
+        model: Optional[str] = None
+    ) -> str:
+        """
+        Generate content using Gemini API with text-only input (no file).
+        
+        Args:
+            prompt: Text prompt for analysis
+            response_schema: Optional JSON schema for structured response
+            model: Optional model override
+            
+        Returns:
+            Generated content as text
+            
+        Raises:
+            GeminiAPIError: If content generation fails
+        """
+        model = model or self.config.api.default_model
+        
+        logger.debug(f"Generating text-only content with model: {model}")
+        
+        try:
+            # Prepare content parts (text only)
+            content_parts = [
+                types.Part.from_text(text=prompt)
+            ]
+            
+            # Configure generation
+            generation_config = types.GenerateContentConfig()
+            
+            if response_schema:
+                generation_config.response_mime_type = "application/json"
+                generation_config.response_schema = response_schema
+            
+            # PARALLEL PROCESSING: Use global semaphore for intelligent rate limiting
+            with self.global_semaphore:
+                # Track API call start time
+                start_time = time.time()
+                
+                # Add safety settings to prevent hallucinations
+                generation_config.temperature = 0.3  # Lower temperature for more deterministic output
+                generation_config.top_p = 0.8  # Reduce randomness
+                generation_config.top_k = 40  # Limit token selection
+                generation_config.max_output_tokens = 8192  # Reasonable limit
+                
+                # Generate content
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=[
+                        types.Content(
+                            role='user',
+                            parts=content_parts
+                        )
+                    ],
+                    config=generation_config
+                )
+                
+                # Track statistics
+                processing_time = time.time() - start_time
+                
+                # Log response structure for debugging
+                logger.debug(f"Response type: {type(response)}")
+                if hasattr(response, '__dict__'):
+                    logger.debug(f"Response attributes: {list(response.__dict__.keys())}")
+                
+                self._track_api_call(response, 'generate_text_only_content', processing_time)
+                
+                if not response.text:
+                    raise GeminiAPIError("Empty response from Gemini API")
+                
+                logger.debug(f"Text-only content generated successfully ({len(response.text)} chars)")
+                return response.text
+            
+        except Exception as e:
+            logger.error(f"Text-only content generation failed: {e}")
+            raise GeminiAPIError(f"Failed to generate text-only content: {e}") from e
+    
     def generate_multi_turn_content(
         self,
         file_uri: str,

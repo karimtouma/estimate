@@ -11,12 +11,18 @@ default_model = "gemini-2.5-pro"
 request_timeout = 300
 # Maximum retries for failed requests
 max_retries = 5
-# Language for AI responses and analysis
-output_language = "english"
-# System prompt language settings
-system_prompts_language = "english"
-# Force English output regardless of input language
-force_english_output = true
+# Language configuration
+# auto: Detect document language automatically
+# spanish: Force Spanish output
+# english: Force English output  
+# mixed: Preserve document's mixed language
+output_language = "auto"
+# System prompt language settings (auto will adapt to detected language)
+system_prompts_language = "auto"
+# Force specific language output (overrides auto-detection)
+force_language_output = false
+# Fallback language when detection fails
+fallback_language = "spanish"
 # PARALLEL PROCESSING: Maximum concurrent API requests (3-5 recommended)
 max_concurrent_requests = 3
 
@@ -82,6 +88,19 @@ enable_dynamic_schemas = true
 auto_register_confidence_threshold = 0.85
 enable_continuous_learning = true
 registry_persistence_path = "data/dynamic_registry.json"
+# GEPA comprehensive prompt optimization
+enable_gepa_evolution = true
+gepa_evolution_threshold = 3  # Minimum analyses to trigger optimization
+gepa_target_improvement = 0.20  # Target improvement for optimization
+gepa_max_generations = 10  # Maximum evolution generations
+gepa_population_size = 8  # Population size for genetic algorithm
+gepa_optimization_threshold = 0.7  # Minimum score to trigger optimization
+gepa_test_samples = 3  # Number of test samples per prompt
+# GEPA always-on classification enhancement
+enable_gepa_always_classification = true  # ALWAYS enhance classification
+gepa_classification_candidates = 5  # Number of candidates to generate
+gepa_judge_weight = 0.4  # Weight of judge evaluation vs confidence
+gepa_consensus_threshold = 0.7  # Threshold for consensus agreement
 # Taxonomy configuration
 taxonomy_confidence_threshold = 0.7
 element_detection_threshold = 0.6
@@ -101,7 +120,7 @@ default_questions = [
     "What technical specifications, codes, or standards are referenced?"
 ]
 # Analysis instructions
-analysis_instructions = "Always provide responses in English. Analyze technical drawings, blueprints, and construction documents. Focus on structural, architectural, mechanical, electrical, and civil engineering aspects."
+analysis_instructions = "Analyze technical drawings, blueprints, and construction documents. Focus on structural, architectural, mechanical, electrical, and civil engineering aspects. Language will be automatically detected and optimized."
 
 [output]
 # Output configuration

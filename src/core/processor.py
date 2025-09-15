@@ -24,6 +24,11 @@ from ..utils.dspy_hallucination_detector import (
     validate_data_extraction_with_dspy,
     validate_page_classification
 )
+try:
+    from ..utils.language_router import LanguageRouter
+    LANGUAGE_ROUTER_AVAILABLE = True
+except ImportError:
+    LANGUAGE_ROUTER_AVAILABLE = False
 
 # Import the new discovery system (FASE 1)
 try:
@@ -80,9 +85,17 @@ class PDFProcessor:
             self.gemini_client = GeminiClient(config)
             self.file_manager = FileManager(config)
             
+            # Initialize language router if available
+            if LANGUAGE_ROUTER_AVAILABLE:
+                self.language_router = LanguageRouter(config, self.gemini_client)
+                logger.info("Language router initialized for automatic language detection")
+            else:
+                self.language_router = None
+            
             # Initialize state
             self.conversation_history: List[Dict[str, Any]] = []
             self._current_file_uri: Optional[str] = None
+            self.detected_language = None  # Will be set by language detection
             
             # Initialize DSPy with Gemini for hallucination detection
             api_key = config.gemini.api_key if hasattr(config, 'gemini') else None
@@ -236,24 +249,40 @@ class PDFProcessor:
             Tuple of (prompt, schema)
         """
         # Get language configuration
-        output_language = getattr(self.config.api, 'output_language', 'english')
-        force_english = getattr(self.config.api, 'force_english_output', True)
+        output_language = getattr(self.config.api, 'output_language', 'auto')
+        force_language = getattr(self.config.api, 'force_language_output', False)
+        fallback_language = getattr(self.config.api, 'fallback_language', 'spanish')
         analysis_instructions = getattr(self.config.analysis, 'analysis_instructions', '')
         
-        # Base language instruction
-        language_instruction = ""
-        if force_english or output_language.lower() == 'english':
-            language_instruction = "IMPORTANT: Always respond in English. Provide all analysis, summaries, and insights in English language only. "
+        # Determine optimal language for prompts
+        if force_language and output_language != 'auto':
+            # Force specific language
+            target_language = output_language
+        elif hasattr(self, 'detected_language') and self.detected_language:
+            # Use detected language
+            target_language = self.detected_language.get_optimal_prompt_language()
+        else:
+            # Use fallback
+            target_language = fallback_language
+        
+        # Create language instruction based on target language
+        if target_language == 'spanish':
+            language_instruction = "IMPORTANTE: Responde completamente en español. Proporciona todo el análisis, resúmenes e insights en idioma español únicamente. "
+        else:
+            language_instruction = "IMPORTANT: Respond completely in English. Provide all analysis, summaries, and insights in English language only. "
         
         # Add analysis instructions if configured
         if analysis_instructions:
             language_instruction += f"{analysis_instructions} "
         
-        # Try to get GEPA-optimized prompts
-        optimized_prompt = self._get_gepa_optimized_prompt(analysis_type, language_instruction)
-        if optimized_prompt:
-            logger.info(f"Using GEPA-optimized prompt for {analysis_type.value}")
-            return optimized_prompt, self._get_schema(analysis_type)
+        # GEPA optimization removed - using direct adaptive analysis
+        
+        # Check for GEPA-optimized prompts first
+        if hasattr(self, 'optimized_prompts'):
+            optimized_key = f"{analysis_type.value}_analysis"
+            if optimized_key in self.optimized_prompts:
+                logger.info(f"🧬 Using GEPA-optimized prompt for {analysis_type.value}")
+                return self.optimized_prompts[optimized_key], self._get_schema(analysis_type)
         
         # Create adaptive prompts based on discovery results
         if discovery_result:
@@ -337,19 +366,30 @@ class PDFProcessor:
         focus_areas = self._extract_focus_areas_from_discovery(discovery_result)
         focus_instruction = f"Focus specifically on {', '.join(focus_areas)} aspects relevant to {industry_domain}." if focus_areas else f"Focus on aspects relevant to {industry_domain}."
         
+        # Optimize prompts with language detection if available
+        base_prompt_general = f"""
+        Perform a comprehensive analysis of this {document_type} from the {industry_domain} domain. Provide:
+        1. A clear and concise executive summary
+        2. The main topics addressed in the document
+        3. The most important and relevant insights
+        4. The identified document type and its specific characteristics
+        5. Your confidence level in the analysis
+        
+        Be precise, objective and structured in your response. {focus_instruction}
+        """
+        
+        # Apply language optimization if language router is available
+        if hasattr(self, 'detected_language') and hasattr(self, 'language_router'):
+            optimized_general_prompt = self.language_router.optimize_prompt_for_language(
+                base_prompt_general, 
+                self.detected_language, 
+                analysis_type.value
+            )
+        else:
+            optimized_general_prompt = f"{language_instruction}\n\n{base_prompt_general}"
+        
         adaptive_prompts = {
-            AnalysisType.GENERAL: f"""
-            {language_instruction}
-            
-            Perform a comprehensive analysis of this {document_type} from the {industry_domain} domain. Provide:
-            1. A clear and concise executive summary
-            2. The main topics addressed in the document
-            3. The most important and relevant insights
-            4. The identified document type and its specific characteristics
-            5. Your confidence level in the analysis
-            
-            Be precise, objective and structured in your response. {focus_instruction}
-            """,
+            AnalysisType.GENERAL: optimized_general_prompt,
             
             AnalysisType.SECTIONS: f"""
             {language_instruction}
@@ -435,49 +475,7 @@ class PDFProcessor:
         # Remove duplicates and return
         return list(set(focus_areas))
     
-    def _get_gepa_optimized_prompt(self, analysis_type: AnalysisType, language_instruction: str) -> Optional[str]:
-        """
-        Get GEPA+DSPy optimized prompt with intelligent learning.
-        
-        Args:
-            analysis_type: Type of analysis
-            language_instruction: Language instruction to prepend
-            
-        Returns:
-            Optimized prompt using GEPA+DSPy or None if optimization should be triggered
-        """
-        try:
-            # Initialize GEPA+DSPy system
-            gepa_system = self._initialize_gepa_dspy_system()
-            if not gepa_system:
-                return None
-            
-            # Get current performance metrics for this analysis type
-            current_performance = self._get_analysis_performance_metrics(analysis_type)
-            
-            # Check if we need to trigger optimization
-            if self._should_trigger_optimization(analysis_type, current_performance):
-                logger.info(f"Triggering GEPA+DSPy optimization for {analysis_type.value}")
-                self._trigger_intelligent_optimization(analysis_type, current_performance)
-            
-            # Load optimized prompt from GEPA+DSPy system
-            optimized_prompt = gepa_system.get_optimized_prompt(analysis_type)
-            if optimized_prompt:
-                # Enhance with DSPy reasoning chain
-                enhanced_prompt = self._enhance_with_dspy_reasoning(
-                    optimized_prompt, analysis_type, language_instruction
-                )
-                
-                logger.info(f"Using GEPA+DSPy optimized prompt for {analysis_type.value} (performance boost: {gepa_system.get_improvement_score(analysis_type):.2f})")
-                return enhanced_prompt
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"GEPA+DSPy optimization failed: {e}")
-            # Don't fallback - log error and continue with optimization trigger
-            self._trigger_intelligent_optimization(analysis_type, {"error": str(e)})
-            return None
+    # GEPA optimization method removed - using direct adaptive analysis
     
     def _should_auto_optimize(self) -> bool:
         """
@@ -498,57 +496,7 @@ class PDFProcessor:
         # Auto-optimize if we have processed at least 3 documents
         return len(analysis_files) >= 3
     
-    def _auto_generate_gepa_optimization(self) -> None:
-        """
-        Auto-generate GEPA optimization in background.
-        """
-        try:
-            # Import GEPA components
-            from ..optimization.gepa_optimizer import GEPAPromptOptimizer
-            
-            logger.info("Starting background GEPA optimization...")
-            
-            # Create simplified optimization
-            gepa_optimizer = GEPAPromptOptimizer(self.config)
-            
-            # Generate quick optimization (reduced parameters for auto-mode)
-            quick_config = {
-                "num_generations": 5,  # Reduced from 10
-                "population_size": 4,  # Reduced from 8
-                "target_improvement": 0.10,  # Reduced from 0.15
-                "auto_mode": True
-            }
-            
-            # Run optimization asynchronously (don't block main analysis)
-            import asyncio
-            import threading
-            
-            def run_optimization():
-                try:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    results = loop.run_until_complete(
-                        gepa_optimizer.optimize_blueprint_analysis_prompts()
-                    )
-                    
-                    # Save results
-                    output_dir = Path(self.config.get_directories()["output"])
-                    results_file = output_dir / "gepa_optimization_results.json"
-                    gepa_optimizer.save_optimization_results(results, results_file)
-                    
-                    logger.info("Background GEPA optimization completed successfully")
-                    
-                except Exception as e:
-                    logger.warning(f"Background GEPA optimization failed: {e}")
-                finally:
-                    loop.close()
-            
-            # Start optimization in background thread
-            optimization_thread = threading.Thread(target=run_optimization, daemon=True)
-            optimization_thread.start()
-            
-        except Exception as e:
-            logger.warning(f"Failed to start background GEPA optimization: {e}")
+    # GEPA optimization removed - using direct adaptive analysis instead
     
     def _get_schema(self, analysis_type: AnalysisType) -> Dict[str, Any]:
         """
@@ -617,41 +565,9 @@ class PDFProcessor:
             logger.warning(f"Failed to get GEPA usage info: {e}")
             return None
     
-    def _initialize_gepa_dspy_system(self):
-        """
-        Initialize intelligent GEPA+DSPy optimization system.
-        
-        Returns:
-            GEPA+DSPy system instance or None if not available
-        """
-        try:
-            # Check if optimization is enabled
-            if not getattr(self.config.analysis, 'enable_dspy_optimization', False):
-                return None
-            
-            # Import and initialize the intelligent system
-            from ..optimization.intelligent_gepa_system import IntelligentGEPADSPySystem
-            
-            # Create or load existing system
-            gepa_system = IntelligentGEPADSPySystem(self.config)
-            
-            return gepa_system
-            
-        except ImportError:
-            logger.warning("GEPA+DSPy system not available - creating intelligent system")
-            return self._create_intelligent_system()
-        except Exception as e:
-            logger.error(f"Failed to initialize GEPA+DSPy system: {e}")
-            return None
+    # GEPA system removed - using direct adaptive analysis instead
     
-    def _create_intelligent_system(self):
-        """Create a lightweight intelligent optimization system."""
-        try:
-            from ..optimization.intelligent_gepa_system import IntelligentPromptSystem
-            return IntelligentPromptSystem(self.config)
-        except ImportError:
-            logger.warning("IntelligentPromptSystem not available")
-            return None
+    # Intelligent system removed - using direct adaptive analysis instead
     
     def _get_analysis_performance_metrics(self, analysis_type: AnalysisType) -> Dict[str, Any]:
         """
@@ -769,48 +685,7 @@ class PDFProcessor:
         
         return should_optimize
     
-    def _trigger_intelligent_optimization(self, analysis_type: AnalysisType, performance: Dict[str, Any]):
-        """
-        Trigger intelligent GEPA+DSPy optimization in background.
-        
-        Args:
-            analysis_type: Type of analysis to optimize
-            performance: Current performance metrics
-        """
-        try:
-            import threading
-            import asyncio
-            
-            def run_optimization():
-                try:
-                    # Create new event loop for background thread
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                    
-                    # Run intelligent optimization
-                    from ..optimization.intelligent_gepa_system import run_intelligent_optimization
-                    
-                    optimization_result = loop.run_until_complete(
-                        run_intelligent_optimization(
-                            self.config, 
-                            analysis_type, 
-                            performance
-                        )
-                    )
-                    
-                    logger.info(f"Background optimization completed for {analysis_type.value}: improvement={optimization_result.get('improvement', 0):.2f}")
-                    
-                except Exception as e:
-                    logger.error(f"Background optimization failed: {e}")
-                finally:
-                    loop.close()
-            
-            # Start optimization in background
-            optimization_thread = threading.Thread(target=run_optimization, daemon=True)
-            optimization_thread.start()
-            
-        except Exception as e:
-            logger.error(f"Failed to trigger intelligent optimization: {e}")
+    # Intelligent optimization removed - using direct adaptive analysis instead
     
     def _enhance_with_dspy_reasoning(self, base_prompt: str, analysis_type: AnalysisType, language_instruction: str) -> str:
         """
@@ -1336,7 +1211,47 @@ Remember: Provide precise, technical analysis with high confidence scores for ac
         if hasattr(self, 'gemini_client'):
             self.gemini_client.cleanup_uploaded_files()
         
+        # Cleanup async clients to prevent warning
+        self._cleanup_async_clients()
+        
         logger.info("PDFProcessor cleanup completed")
+    
+    def _cleanup_async_clients(self):
+        """Clean up async clients to prevent litellm warnings."""
+        try:
+            import asyncio
+            import warnings
+            
+            # Suppress the specific warning
+            warnings.filterwarnings("ignore", 
+                                  message="coroutine 'close_litellm_async_clients' was never awaited",
+                                  category=RuntimeWarning)
+            
+            # Try to properly close litellm clients if available
+            try:
+                from litellm import close_litellm_async_clients
+                
+                # Check if there's an active event loop
+                try:
+                    loop = asyncio.get_running_loop()
+                    # If we're in an async context, schedule the cleanup
+                    loop.create_task(close_litellm_async_clients())
+                except RuntimeError:
+                    # No running loop, create one for cleanup
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        loop.run_until_complete(close_litellm_async_clients())
+                    finally:
+                        loop.close()
+                        
+            except (ImportError, AttributeError):
+                # litellm not available or doesn't have this function
+                pass
+                
+        except Exception as e:
+            # Silently ignore cleanup errors - they're not critical
+            logger.debug(f"Async cleanup warning suppressed: {e}")
     
     def _display_api_statistics(self) -> None:
         """Display comprehensive API usage statistics."""

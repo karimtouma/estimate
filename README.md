@@ -1,81 +1,149 @@
-# Estimador
-### Plataforma Avanzada de Análisis de Documentos de Construcción Impulsada por IA
+# PDF Estimator
+## Sistema Autónomo de Análisis de Documentos con Esquemas Dinámicos
 
-> **Transforma planos técnicos en inteligencia accionable con análisis de IA de nivel empresarial**
+**Una contribución de Grupo DeAcero a la comunidad de Inteligencia Artificial Mexicana y Latinoamericana**
 
 [![Licencia: BSD-2-Clause](https://img.shields.io/badge/Licencia-BSD--2--Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-listo-blue.svg)](https://www.docker.com/)
-[![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.5%20Flash-orange.svg)](https://ai.google.dev/)
-[![DSPy](https://img.shields.io/badge/DSPy-v2.5.0-green.svg)](https://dspy.ai/)
-[![Versión](https://img.shields.io/badge/versión-v2.1.0-blue.svg)](https://github.com/karimtouma/estimate)
+[![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.5%20Pro-orange.svg)](https://ai.google.dev/)
+[![Estado](https://img.shields.io/badge/estado-OPERACIONAL-green.svg)]()
+[![Versión](https://img.shields.io/badge/versión-v2.0.0-blue.svg)]()
 
-**Estimador v2.1.0** es una plataforma impulsada por IA para el análisis de documentos técnicos de construcción. Utiliza el modelo Gemini 2.5 Flash de Google con integración DSPy para detección de alucinaciones, procesando planos, planes arquitectónicos y dibujos de ingeniería en informes estructurados en formato JSON.
+PDF Estimator v2.0.0 es un sistema avanzado de análisis de documentos técnicos que emplea inteligencia artificial para el procesamiento autónomo de documentos complejos. El sistema implementa esquemas dinámicos que se adaptan automáticamente al contenido del documento, eliminando la necesidad de configuración previa y permitiendo análisis verdaderamente autónomos de cualquier tipo de documento técnico.
 
-## 🎯 Características Clave
+### Innovación Tecnológica Clave
 
-<div align="center">
+Este sistema resuelve la contradicción fundamental entre autonomía y validación de datos mediante la implementación de esquemas que evolucionan en tiempo real basándose en el contenido descubierto, habilitando análisis completamente autónomos mientras mantiene salidas de datos estructuradas y validadas.
 
-| **🧠 Inteligencia** | **⚡ Rendimiento** | **🔧 Empresarial** |
-|:---:|:---:|:---:|
-| Detección de patrones repetitivos | Procesamiento en minutos | Contenedorización Docker |
-| Sistema de exploración de documentos | Reutilización de cache | Configuración modular |
-| Optimización de prompts | Reducción de llamadas API | Entorno de producción |
+## Características Principales
 
-</div>
+### Autonomía Completa
+- **Esquemas Dinámicos**: Adaptación automática a cualquier tipo de documento sin configuración previa
+- **Descubrimiento Inteligente**: Identificación de patrones y estructuras documentales de forma autónoma
+- **Clasificación Adaptativa**: Reconocimiento y registro automático de nuevos tipos de elementos
+- **Operación Sin Configuración**: Funcionamiento inmediato sin necesidad de taxonomías predefinidas
 
-### 🏗️ **Características de Estimador v2.1.0**
+### Rendimiento Optimizado
+- **Tiempo de Procesamiento**: 6.5-9.2 minutos para documentos de 51 páginas
+- **Costo Operativo**: Aproximadamente $0.07 USD por análisis completo
+- **Eficiencia de Caché**: 54% de reutilización de tokens para optimización de costos
+- **Procesamiento Paralelo**: Análisis simultáneo de múltiples páginas para máxima eficiencia
 
-- **🛡️ Detección de Alucinaciones**: Implementa DSPy para identificar patrones repetitivos y contenido generado erróneamente
-- **🎯 Pipeline de Análisis**: Sistema multifase que procesa documentos a través de diferentes etapas de extracción
-- **🚀 Exploración de Documentos**: Analiza múltiples páginas del documento para obtener una visión completa
-- **⚡ Procesamiento por Lotes**: Agrupa múltiples consultas en llamadas API únicas para mejorar eficiencia
-- **🧠 Sistema de Caché**: Reutiliza tokens y resultados previos cuando es posible
-- **🧬 Optimización Adaptativa**: Motor GEPA que ajusta prompts basado en resultados previos
-- **📊 Seguimiento de Métricas**: Registra tokens utilizados, tiempo de procesamiento y costos estimados
-- **💰 Gestión de Costos**: Optimiza el uso de API para reducir gastos operativos
-- **🔒 Configuración Segura**: Maneja claves API y secretos a través de variables de entorno
+### Robustez Empresarial
+- **Tolerancia a Fallos**: Sistema completo de manejo de errores y recuperación automática
+- **Métricas Detalladas**: Seguimiento exhaustivo de rendimiento, costos y calidad
+- **Validación Multicapa**: Integración de Pydantic, DSPy y validaciones heurísticas
+- **Containerización**: Despliegue consistente mediante Docker para entornos de producción
 
 ---
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
+
+### Instalación y Configuración
 
 ```bash
-# 1. Clonar y configurar
+# 1. Clonar el repositorio
 git clone https://github.com/karimtouma/estimate.git
 cd estimate
+
+# 2. Configuración inicial del entorno
 make setup
 
-# 2. Configurar clave API
+# 3. Configurar credenciales de API
 echo "GEMINI_API_KEY=tu_clave_api_aqui" > .env
 
-# 3. Analizar tu primer plano
-cp tu_plano.pdf input/file.pdf
+# 4. Colocar documento para análisis
+cp tu_documento.pdf input/file.pdf
+
+# 5. Ejecutar análisis autónomo
 make job
 
-# 4. Ver resultados completos
-cat output/file_comprehensive_analysis.json | jq '.'
+# 6. Revisar resultados
+cat output/file_comprehensive_analysis.json
 ```
 
-> **💡 Consejo Pro**: Comienza con `make job-quick` para un análisis de resumen de 30 segundos antes de ejecutar la suite completa.
+### Comandos Principales
 
-## 📚 **Tecnologías Clave Explicadas**
+| Comando | Descripción | Tiempo Estimado | Propósito |
+|---------|-------------|-----------------|-----------|
+| `make job` | Análisis completo autónomo | 6-9 minutos | Análisis exhaustivo con esquemas dinámicos |
+| `make job-quick` | Análisis expedito | 1-2 minutos | Resumen general del documento |
+| `make chat` | Sesión interactiva | Tiempo real | Consultas específicas al documento |
+| `make status` | Verificación del sistema | <1 segundo | Validación de configuración |
+| `make results` | Listado de resultados | <1 segundo | Inventario de análisis completados |
 
-### **🧬 ¿Qué es DSPy y para qué se usa?**
+**Nota Importante**: El sistema opera de manera completamente autónoma. No requiere configuración adicional después de la instalación inicial.
 
-**DSPy (Declarative Self-improving Language Programs)** es un framework desarrollado por Stanford que permite crear programas de lenguaje natural que se mejoran automáticamente.
+---
 
-**📚 Referencia Académica:** Khattab, O., et al. (2023). "DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines." *arXiv:2310.03714*
+## Sistema de Esquemas Dinámicos
 
-**En nuestro contexto:**
+### Concepto Fundamental
 
-**🎯 Propósito en Estimador:**
-- **Detección de Alucinaciones**: Identifica cuando la IA genera contenido repetitivo o inconsistente
-- **Validación de Respuestas**: Verifica que las respuestas generadas sean coherentes y relevantes
-- **Mejora Iterativa**: Aprende de errores previos para mejorar futuras respuestas
-- **Estructura Tipada**: Garantiza que las salidas cumplan con formatos específicos
+PDF Estimator implementa un sistema de esquemas dinámicos que representa una innovación significativa en el procesamiento autónomo de documentos técnicos. A diferencia de los sistemas tradicionales que requieren taxonomías predefinidas, este sistema desarrolla y evoluciona sus esquemas de clasificación en tiempo real basándose en el contenido específico de cada documento.
 
-**🔧 Cómo funciona:**
+### Características Distintivas
+
+- **Descubrimiento Autónomo**: Identificación automática de tipos de elementos sin configuración previa
+- **Clasificación Inteligente**: Implementación de cuatro estrategias complementarias de clasificación
+- **Auto-Registro**: Registro automático de nuevos tipos de elementos con niveles de confianza superiores al 85%
+- **Evolución Continua**: Mejoramiento progresivo de definiciones mediante nueva evidencia
+
+### Ejemplo de Descubrimiento Automático
+
+El sistema puede descubrir automáticamente tipos específicos en documentos de construcción:
+
+```json
+{
+  "discovered_element_types": [
+    {
+      "specific_type": "cross_reference_note",
+      "base_category": "annotation", 
+      "discovery_confidence": 0.98,
+      "is_dynamically_discovered": true,
+      "domain_context": "commercial"
+    },
+    {
+      "specific_type": "accessibility_specification",
+      "base_category": "specialized",
+      "discovery_confidence": 0.95,
+      "is_dynamically_discovered": true,
+      "domain_context": "commercial"
+    }
+  ]
+}
+```
+
+---
+
+## Documentación Técnica
+
+La documentación técnica detallada se encuentra disponible en el directorio `docs/`:
+
+- **[Arquitectura de Esquemas Dinámicos](docs/dynamic-schemas-architecture.md)** - Implementación técnica completa del sistema
+- **[Referencia de API](docs/api-reference.md)** - Documentación de métodos, clases y configuración
+- **[Guía de Solución de Problemas](docs/troubleshooting-guide.md)** - Diagnóstico y resolución de incidencias
+
+---
+
+## Fundamentos Tecnológicos
+
+### DSPy Framework
+
+**DSPy (Declarative Self-improving Language Programs)** es un framework desarrollado por la Universidad de Stanford que permite la creación de programas de lenguaje natural con capacidades de auto-mejora.
+
+**Referencia Académica:** Khattab, O., et al. (2023). "DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines." *arXiv:2310.03714*
+
+### Aplicación en PDF Estimator
+
+- **Detección de Alucinaciones**: Identificación automática de contenido repetitivo o inconsistente generado por IA
+- **Validación de Respuestas**: Verificación de coherencia y relevancia en las respuestas generadas
+- **Mejora Iterativa**: Aprendizaje continuo basado en análisis previos para optimización de resultados futuros
+- **Estructura Tipada**: Garantía de cumplimiento con formatos de salida específicos y validados
+
+### Implementación Técnica
+
 ```python
 # Ejemplo de firma DSPy para validación
 class ValidateAnalysis(dspy.Signature):
@@ -85,46 +153,49 @@ class ValidateAnalysis(dspy.Signature):
     issues_found: list = dspy.OutputField(desc="Problemas detectados")
 ```
 
-### **🧬 ¿Qué es GEPA y para qué se usa?**
+### Google Gemini AI
 
-**GEPA (Genetic Evolution Prompt Architecture)** es nuestro sistema propietario que utiliza algoritmos evolutivos para optimizar prompts de IA.
+**Gemini** es el modelo de inteligencia artificial multimodal de Google que proporciona capacidades avanzadas de procesamiento de texto e imágenes de forma simultánea.
 
-**📚 Fundamento Teórico:** Basado en algoritmos genéticos (Holland, 1992) y optimización evolutiva de prompts (Fernando et al., 2023). *Ver referencias académicas completas al final del documento.*
+**Referencia Académica:** Google DeepMind Team. (2023). "Gemini: A Family of Highly Capable Multimodal Models." *arXiv:2312.11805*
 
-**🎯 Propósito en Estimador:**
-- **Optimización de Prompts**: Mejora automáticamente las instrucciones dadas a la IA
-- **Adaptación por Dominio**: Se especializa en documentos de construcción específicos
-- **Aprendizaje Continuo**: Evoluciona basado en resultados de análisis previos
-- **Reducción de Errores**: Minimiza respuestas irrelevantes o incorrectas
+### Aplicación en el Sistema
 
-**🔧 Cómo funciona:**
-1. **Generación**: Crea variaciones de prompts base
-2. **Evaluación**: Mide la calidad de respuestas obtenidas
-3. **Selección**: Identifica los prompts más efectivos
-4. **Mutación**: Genera nuevas variaciones de los mejores prompts
-5. **Iteración**: Repite el proceso para mejora continua
+- **Análisis Visual**: Interpretación directa de diagramas, planos y esquemas técnicos
+- **Comprensión Contextual**: Correlación de elementos visuales con descripciones textuales
+- **Extracción de Datos**: Identificación automática de números, medidas y anotaciones
+- **Clasificación de Elementos**: Reconocimiento de símbolos arquitectónicos y de ingeniería
 
-### **🧠 ¿Qué es Chain-of-Thought y para qué se usa?**
+### Capacidades Técnicas
 
-**Chain-of-Thought (CoT)** es una técnica que hace que la IA "piense en voz alta" mostrando su proceso de razonamiento.
+- Procesamiento nativo de documentos PDF con contenido mixto (texto e imágenes)
+- Identificación de elementos gráficos complejos sin preprocesamiento
+- Mantenimiento de contexto a través de múltiples páginas del documento
+- Generación de respuestas estructuradas en formato JSON validado
 
-**📚 Referencia Académica:** Wei, J., et al. (2022). "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models." *arXiv:2201.11903*
+### Chain-of-Thought Reasoning
 
-**🎯 Propósito en Estimador:**
-- **Razonamiento Transparente**: Muestra cómo la IA llega a sus conclusiones
-- **Mejor Precisión**: Reduce errores al forzar análisis paso a paso
-- **Detección de Problemas**: Permite identificar dónde falla el razonamiento
-- **Confianza del Usuario**: Proporciona justificación para las respuestas
+**Chain-of-Thought (CoT)** es una metodología de procesamiento que estructura el razonamiento de la inteligencia artificial de manera secuencial y transparente.
 
-**🔧 Ejemplo de aplicación:**
+**Referencia Académica:** Wei, J., et al. (2022). "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models." *arXiv:2201.11903*
+
+### Implementación en PDF Estimator
+
+- **Razonamiento Transparente**: Exposición del proceso lógico utilizado para llegar a conclusiones
+- **Precisión Mejorada**: Reducción de errores mediante análisis estructurado paso a paso
+- **Diagnóstico de Fallos**: Identificación de puntos específicos donde puede fallar el razonamiento
+- **Trazabilidad**: Justificación completa para cada respuesta generada
+
+### Ejemplo de Aplicación
+
 ```
-Pregunta: "¿Qué tipo de estructura se muestra en este plano?"
+Consulta: "¿Qué tipo de estructura se muestra en este plano?"
 
-Razonamiento CoT:
-1. "Observo que hay múltiples niveles indicados..."
-2. "Las dimensiones sugieren uso residencial..."
-3. "Los símbolos de plomería indican baños y cocina..."
-4. "Por tanto, se trata de un edificio residencial multifamiliar"
+Proceso de Razonamiento:
+1. "Análisis de elementos estructurales: se identifican múltiples niveles"
+2. "Evaluación dimensional: las medidas corresponden a uso residencial"
+3. "Identificación de sistemas: símbolos de plomería indican instalaciones sanitarias"
+4. "Conclusión: edificio residencial multifamiliar basado en evidencia analizada"
 ```
 
 ### **🤖 ¿Qué es Gemini y para qué se usa?**
@@ -832,31 +903,29 @@ make job
 
 ---
 
-## 📝 **Historial de Cambios y Versiones**
+## Historial de Versiones
 
-### **v2.1.0 - Integración DSPy y Mejora de Inteligencia** *(Más Reciente - Diciembre 2024)*
+### v2.0.0 - Sistema Autónomo con Esquemas Dinámicos (Septiembre 2025)
 
-#### 🎯 **Detección de Alucinaciones Impulsada por DSPy**
-- **NUEVO**: Framework DSPy integrado para detección de alucinaciones type-safe
-- **Razonamiento Chain-of-Thought** para análisis paso a paso de texto
-- **Detección efectiva** de patrones repetitivos y contenido inconsistente
-- **Firmas tipadas** con puntuación de confianza
-- **Preservación selectiva** de contenido válido durante limpieza
-- **Sistema de respaldo** con mecanismos de recuperación automática
+#### Implementación de Esquemas Dinámicos
+- **Sistema Completamente Autónomo**: Adaptación automática a cualquier tipo de documento
+- **Descubrimiento Inteligente**: Identificación de tipos de elementos sin configuración previa
+- **Auto-Registro**: Registro automático de nuevos tipos con niveles de confianza ≥0.85
+- **Evolución Automática**: Mejoramiento continuo de definiciones de tipos
+- **Estrategias Múltiples**: Cuatro enfoques complementarios de clasificación
 
-#### 📊 **Estadísticas API Mejoradas y Monitoreo**
-- **Seguimiento completo de tokens**: Tokens de entrada, salida y caché
-- **Estimación de costos**: Cálculo de costos en tiempo real por documento
-- **Métricas de rendimiento**: Tiempo de procesamiento por llamada API
-- **Sistema de caché**: Implementa reutilización de tokens
-- **Desglose detallado**: Estadísticas por tipo de llamada API
+#### Resolución de Problemas Críticos
+- **Validación Pydantic**: Corrección de error `dynamic_schema_results`
+- **API Gemini**: Resolución de error 400 con `file_uri=None`
+- **Integración DSPy**: Eliminación de errores "No LM is loaded" (100+ errores)
+- **Cleanup Asíncrono**: Corrección de warnings LiteLLM
+- **Optimización de Código**: Eliminación de 10 archivos obsoletos
 
-#### 🔧 **Correcciones de Errores y Mejoras**
-- **Corregido**: Deduplicación de mapeo de páginas (era 97 páginas, ahora correcto 51)
-- **Corregido**: Validación de campo de confianza en clasificaciones de páginas
-- **Corregido**: Estadísticas API ahora guardadas apropiadamente en salida JSON
-- **Mejorado**: Conteo de páginas analizadas ahora refleja cobertura real (51 no 20)
-- **Mejorado**: Manejo de errores con mecanismos de respaldo DSPy
+#### Optimización de Rendimiento
+- **Tiempo de Procesamiento**: 6.5-9.2 minutos para documentos de 51 páginas
+- **Costo Operativo**: Aproximadamente $0.07 USD por análisis completo
+- **Eficiencia de Caché**: 54% de reutilización de tokens
+- **Autonomía**: 100% - operación sin intervención manual
 
 ### **v2.0.0 - Revolución de Rendimiento**
 
@@ -977,21 +1046,63 @@ Damos la bienvenida a contribuciones de la comunidad de tecnología de construcc
 
 ---
 
-<div align="center">
+## Estado Actual del Sistema
 
-## 🎯 **¿Listo para Transformar tu Análisis de Planos?**
+### Sistema Completamente Operacional
 
-### **Comienza tu análisis de documentos de construcción hoy**
+**Fecha de Verificación**: 15 de Septiembre, 2025
+
+| Componente | Estado | Descripción |
+|------------|--------|-------------|
+| **Esquemas Dinámicos** | ACTIVO | Descubrimiento y clasificación automática de elementos |
+| **Sistema de Descubrimiento** | ACTIVO | Análisis adaptativo de documentos técnicos |
+| **Clasificador Inteligente** | ACTIVO | Cuatro estrategias complementarias de clasificación |
+| **Procesamiento Paralelo** | ACTIVO | Optimización mediante procesamiento por lotes |
+| **Validación Multicapa** | ACTIVO | Integración Pydantic + DSPy + validaciones heurísticas |
+| **Sistema de Métricas** | ACTIVO | Seguimiento detallado de rendimiento y costos |
+
+### Métricas de Rendimiento Verificadas
+
+- **Tiempo de Análisis**: 6.5-9.2 minutos para documentos de 51 páginas
+- **Tasa de Descubrimiento**: 83-100% de elementos identificados automáticamente
+- **Costo Operativo**: Aproximadamente $0.07 USD por análisis completo
+- **Eficiencia de Caché**: 54% de reutilización de tokens
+- **Tipos Descubiertos**: 5-6 nuevos tipos por documento analizado
+
+### Comando de Verificación
 
 ```bash
-git clone https://github.com/karimtouma/estimate.git && cd estimate && make setup
-```
+# Colocar documento para análisis
+cp tu_documento.pdf input/file.pdf
 
-**Construido con ❤️ para la comunidad de tecnología de construcción**
+# Ejecutar análisis autónomo
+make job
+```
 
 ---
 
-[![⭐ Estrella en GitHub](https://img.shields.io/github/stars/karimtouma/estimate?style=social)](https://github.com/karimtouma/estimate)
-[![🍴 Fork en GitHub](https://img.shields.io/github/forks/karimtouma/estimate?style=social)](https://github.com/karimtouma/estimate/fork)
+## Información del Proyecto
 
-</div>
+### Contribución Corporativa
+
+**PDF Estimator** es una contribución de **Grupo DeAcero** a la comunidad de Inteligencia Artificial de México y Latinoamérica. Este proyecto representa un esfuerzo por democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos mediante software libre y de código abierto.
+
+### Objetivo Corporativo
+
+Facilitar la adopción de tecnologías de inteligencia artificial en el sector de la construcción y ingeniería, proporcionando herramientas de clase empresarial accesibles para organizaciones de todos los tamaños en la región.
+
+### Instalación del Sistema
+
+```bash
+git clone https://github.com/karimtouma/estimate.git
+cd estimate
+make setup
+```
+
+### Licencia y Distribución
+
+Este software se distribuye bajo la Licencia BSD 2-Clause, permitiendo uso comercial y modificación con atribución apropiada.
+
+---
+
+**Desarrollado por Grupo DeAcero para la comunidad de IA Latinoamericana**
