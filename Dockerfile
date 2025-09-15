@@ -76,6 +76,7 @@ RUN mkdir -p /app/input /app/output /app/logs /app/temp && \
 
 # Copy application code
 COPY --chown=pdfuser:pdfuser src/ ./src/
+COPY --chown=pdfuser:pdfuser tests/ ./tests/
 COPY --chown=pdfuser:pdfuser *.py ./
 COPY --chown=pdfuser:pdfuser config.toml* ./
 

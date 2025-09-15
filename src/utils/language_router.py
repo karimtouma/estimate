@@ -48,10 +48,64 @@ class LanguageDetectionResult:
 
 class LanguageRouter:
     """
-    Intelligent language detection and prompt optimization system.
+    Sistema inteligente de detección de idioma y optimización de prompts.
     
-    Detects the language(s) used in technical documents and optimizes
-    prompts accordingly for better analysis quality.
+    Detecta automáticamente el idioma principal usado en documentos técnicos
+    y optimiza los prompts de análisis para maximizar la calidad y precisión
+    en el idioma identificado.
+    
+    Funcionalidades principales:
+    - Detección automática del idioma principal del documento
+    - Análisis de distribución de idiomas en documentos mixtos
+    - Identificación de terminología técnica especializada
+    - Optimización adaptativa de prompts por idioma
+    - Soporte para español, inglés y documentos multiidioma
+    
+    Algoritmo de detección:
+    1. Análisis léxico con patrones específicos por idioma
+    2. Evaluación de frecuencia de palabras clave técnicas
+    3. Detección de indicadores regionales y culturales
+    4. Análisis semántico con IA para confirmación
+    5. Cálculo de confianza y distribución de idiomas
+    
+    Optimización de prompts:
+    - Adaptación de instrucciones al idioma detectado
+    - Preservación de terminología técnica especializada
+    - Ajuste de estilo comunicativo por cultura
+    - Optimización de ejemplos y contexto
+    
+    Attributes:
+        config (Config): Configuración del sistema
+        gemini_client (GeminiClient): Cliente para análisis semántico
+        language_patterns (Dict): Patrones léxicos por idioma
+        technical_terms_cache (Dict): Caché de términos técnicos
+        detection_history (List): Historial de detecciones
+        
+    Example:
+        ```python
+        from src.utils.language_router import LanguageRouter
+        from src.core.config import get_config
+        
+        config = get_config()
+        router = LanguageRouter(config, gemini_client)
+        
+        # Detectar idioma del documento
+        result = await router.detect_document_language([
+            "Plano de construcción",
+            "Architectural plan", 
+            "Especificaciones técnicas"
+        ])
+        
+        print(f"Idioma principal: {result.primary_language}")
+        print(f"Confianza: {result.confidence}")
+        print(f"Distribución: {result.language_distribution}")
+        
+        # Optimizar prompt
+        optimized = router.optimize_prompt_for_language(
+            base_prompt="Analyze this technical document",
+            detected_language=result
+        )
+        ```
     """
     
     def __init__(self, config: Config, gemini_client: Optional[GeminiClient] = None):

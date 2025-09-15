@@ -37,10 +37,52 @@ except NameError:
 
 class AdaptiveProcessor(PDFProcessor):
     """
-    Fully autonomous processor with dynamic schema integration.
+    Procesador adaptativo completamente autónomo con integración de esquemas dinámicos.
     
-    Extends the base PDFProcessor to use dynamic schemas, adaptive prompts,
-    and intelligent question generation for complete autonomy.
+    Esta clase extiende PDFProcessor para proporcionar análisis completamente autónomo
+    usando esquemas dinámicos, optimización GEPA, detección de idioma automática y
+    generación inteligente de preguntas sin configuración previa.
+    
+    Características principales:
+    - Esquemas dinámicos que se adaptan automáticamente al contenido
+    - Sistema GEPA con múltiples candidatos y juez inteligente
+    - Language Router para detección automática de idioma
+    - Discovery Engine con análisis estratégico de muestras
+    - Auto-registro de tipos con evolución continua
+    
+    Flujo de procesamiento:
+    1. Enhanced Discovery con esquemas dinámicos
+    2. Language Detection y optimización de prompts
+    3. Clasificación GEPA con múltiples candidatos
+    4. Análisis core con prompts optimizados
+    5. Q&A adaptativo contextual
+    6. Page mapping completo
+    7. Optimización GEPA en background
+    
+    Attributes:
+        dynamic_registry (DynamicElementRegistry): Registro de tipos dinámicos
+        intelligent_classifier (IntelligentTypeClassifier): Clasificador con GEPA
+        language_router (LanguageRouter): Router de detección de idioma
+        gepa_system (ComprehensiveGEPASystem): Sistema de optimización GEPA
+        analysis_history (List): Historial para optimización GEPA
+        enable_dynamic_schemas (bool): Flag de esquemas dinámicos habilitados
+        
+    Example:
+        ```python
+        from src.core.adaptive_processor import AdaptiveProcessor
+        from src.core.config import get_config
+        
+        config = get_config()
+        processor = AdaptiveProcessor(config)
+        
+        result = processor.comprehensive_analysis_adaptive(
+            pdf_path="document.pdf",
+            enable_discovery=True
+        )
+        
+        print(f"Tipos descubiertos: {len(result.dynamic_schema_results.discovered_element_types)}")
+        print(f"Judge Score GEPA: {result.dynamic_schema_results.gepa_statistics.average_judge_score}")
+        ```
     """
     
     def __init__(self, config: Optional[Config] = None):
