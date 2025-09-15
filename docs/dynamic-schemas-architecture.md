@@ -13,25 +13,75 @@ Los esquemas dinámicos resuelven la contradicción entre autonomía y validaci�
 ### **Componentes Core**
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                 DYNAMIC SCHEMA SYSTEM                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────┐ │
-│  │ ELEMENT         │    │ INTELLIGENT     │    │ REGISTRY │ │
-│  │ DISCOVERY       │◄──►│ CLASSIFIER      │◄──►│ MANAGER  │ │
-│  │                 │    │                 │    │          │ │
-│  │ • Pattern Recog │    │ • AI Reasoning  │    │ • Type   │ │
-│  │ • Text Analysis │    │ • Multi-Strategy│    │   Storage│ │
-│  │ • Visual Detect │    │ • Confidence    │    │ • Evolution│ │
-│  └─────────────────┘    └─────────────────┘    └──────────┘ │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          DYNAMIC SCHEMA SYSTEM v2.0                             │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌─────────────┐  ┌──────────────┐   │
+│  │ DISCOVERY       │  │ GEPA             │  │ LANGUAGE    │  │ REGISTRY     │   │
+│  │ ENGINE          │◄─┤ OPTIMIZATION     │◄─┤ ROUTER      │◄─┤ MANAGER      │   │
+│  │                 │  │                  │  │             │  │              │   │
+│  │ • Strategic     │  │ • Multi-Candidate│  │ • Auto      │  │ • Auto-reg   │   │
+│  │   Sampling      │  │   Generation     │  │   Detection │  │ • Evolution  │   │
+│  │ • Pattern       │  │ • Judge          │  │ • Prompt    │  │ • Validation │   │
+│  │   Analysis      │  │   Evaluation     │  │   Optimization│ │ • Persistence│   │
+│  │ • Nomenclature  │  │ • Genetic        │  │ • Multi-lang│  │ • Reliability│   │
+│  │   Processing    │  │   Evolution      │  │   Support   │  │   Scoring    │   │
+│  │ • Batch         │  │ • Consensus      │  │             │  │              │   │
+│  │   Optimization  │  │   Analysis       │  │             │  │              │   │
+│  └─────────────────┘  └──────────────────┘  └─────────────┘  └──────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🧬 **DynamicElementRegistry**
+## GEPA Optimization System
+
+### Funcionamiento Técnico
+
+**GEPA (Genetic Evolution Prompt Architecture)** es el sistema de optimización que mejora continuamente la precisión de clasificación mediante:
+
+#### 1. Generación de Múltiples Candidatos
+- **Candidatos por Elemento**: 5 opciones generadas por clasificación
+- **Diversidad de Enfoques**: Diferentes estrategias de prompting
+- **API Integration**: Utiliza candidates nativos de Gemini API
+
+#### 2. Sistema de Juez Inteligente
+- **Criterios de Evaluación**: Precisión, especificidad, relevancia del dominio, calibración de confianza
+- **Judge Score**: Promedio de 99.7% en evaluación de calidad
+- **Evaluación Comparativa**: Análisis detallado de fortalezas y debilidades
+
+#### 3. Análisis de Consenso
+- **Agreement Level**: Nivel de acuerdo entre candidatos (promedio 97.5%)
+- **Common Themes**: Identificación de elementos comunes
+- **Conflict Detection**: Detección de áreas de discrepancia para mejora
+
+#### 4. Evolución Genética
+- **Population**: Conjunto de prompts de clasificación
+- **Fitness Function**: Basada en judge score y consenso
+- **Genetic Operators**: Selección, crossover, mutación
+- **Continuous Improvement**: Evolución automática hacia mejor rendimiento
+
+### Métricas GEPA
+
+```json
+{
+  "gepa_statistics": {
+    "total_enhancements": 6,
+    "average_consensus": 0.975,
+    "average_judge_score": 0.997,
+    "average_improvement": 0.0008,
+    "average_processing_time": 41.76,
+    "confidence_distribution": {
+      "high": 6, "medium": 0, "low": 0
+    }
+  }
+}
+```
+
+---
+
+## DynamicElementRegistry
 
 ### **Archivo**: `src/models/dynamic_schemas.py`
 

@@ -20,20 +20,24 @@ def comprehensive_analysis_adaptive(
 ) -> ComprehensiveAnalysisResult
 ```
 
-**Descripción**: Ejecuta análisis completo con esquemas dinámicos
+**Descripción**: Ejecuta análisis completo con esquemas dinámicos, optimización GEPA y detección automática de idioma
 
 **Parámetros**:
 - `pdf_path`: Ruta al archivo PDF
 - `questions`: Lista opcional de preguntas (se generan adaptativas si no se proveen)
 - `enable_discovery`: Habilitar descubrimiento dinámico
 
-**Retorna**: `ComprehensiveAnalysisResult` con todos los análisis
+**Retorna**: `ComprehensiveAnalysisResult` con análisis completo, métricas GEPA y detección de idioma
 
 **Fases Ejecutadas**:
 1. Upload del PDF a Gemini
 2. Enhanced Discovery con esquemas dinámicos
-3. Análisis general, secciones y extracción de datos
-4. Análisis multi-turn Q&A
+3. Language Detection y optimización de prompts
+4. Clasificación GEPA con múltiples candidatos y juez inteligente
+5. Análisis general, secciones y extracción de datos con prompts optimizados
+6. Análisis multi-turn Q&A adaptativo
+7. Generación de page map completo
+8. Optimización GEPA en background para mejora continua
 5. Mapeo completo de páginas
 
 ---
