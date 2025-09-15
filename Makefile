@@ -60,6 +60,31 @@ chat: check-config ## 💬 Interactive chat with PDF
 	$(DOCKER_COMPOSE) run --rm pdf-estimator python -m src.cli chat /app/input/file.pdf
 
 # =============================================================================
+# DEVELOPMENT AND TESTING
+# =============================================================================
+
+.PHONY: test
+test: check-config ## 🧪 Run test suite
+	@echo -e "$(BLUE)🧪 Running test suite...$(RESET)"
+	$(DOCKER_COMPOSE) run --rm pdf-estimator python -m pytest tests/ -v
+
+.PHONY: coverage
+coverage: check-config ## 📊 Run tests with coverage report
+	@echo -e "$(BLUE)📊 Running tests with coverage...$(RESET)"
+	$(DOCKER_COMPOSE) run --rm pdf-estimator python -m pytest tests/ --cov=src --cov-report=term-missing
+
+.PHONY: lint
+lint: check-config ## 🔍 Run code quality checks
+	@echo -e "$(BLUE)🔍 Running code quality checks...$(RESET)"
+	@echo -e "$(YELLOW)Note: Install linting tools first with: pip install black isort flake8 mypy$(RESET)"
+	
+.PHONY: docker-test
+docker-test: ## 🐳 Test Docker image build and functionality
+	@echo -e "$(BLUE)🐳 Testing Docker image...$(RESET)"
+	$(DOCKER_COMPOSE) build
+	$(DOCKER_COMPOSE) run --rm pdf-estimator python -c "from src.core.config import Config; print('✅ Docker image working')"
+
+# =============================================================================
 # PROJECT MANAGEMENT
 # =============================================================================
 

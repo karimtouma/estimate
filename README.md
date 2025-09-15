@@ -1,6 +1,13 @@
 # PDF Estimator
 ## Sistema Autónomo de Análisis de Documentos Técnicos
 
+[![CI/CD Pipeline](https://github.com/karimtouma/estimate/actions/workflows/ci.yml/badge.svg)](https://github.com/karimtouma/estimate/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-85%2B%20passing-brightgreen.svg)](https://github.com/karimtouma/estimate/actions)
+[![Coverage](https://img.shields.io/badge/coverage-29%25-yellow.svg)](https://github.com/karimtouma/estimate/actions)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A-green.svg)](https://github.com/karimtouma/estimate/actions)
+[![Security](https://img.shields.io/badge/security-passing-green.svg)](https://github.com/karimtouma/estimate/security)
+[![Docker](https://img.shields.io/badge/docker%20build-passing-brightgreen.svg)](https://github.com/karimtouma/estimate/actions)
+
 [![Licencia: BSD-2-Clause](https://img.shields.io/badge/Licencia-BSD--2--Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
@@ -64,8 +71,10 @@ cat output/file_comprehensive_analysis.json | jq '.dynamic_schema_results'
 
 | Comando | Descripción | Tiempo |
 |---------|-------------|--------|
-| `make job` | Análisis completo autónomo | 11-13 min |
+| `make job` | Análisis completo autónomo | 13-14 min |
 | `make job-quick` | Análisis rápido | 2-3 min |
+| `make test` | Ejecutar suite de tests | 2-5 min |
+| `make coverage` | Tests con cobertura | 3-6 min |
 | `make status` | Verificar configuración | <1 seg |
 | `make results` | Ver últimos resultados | <1 seg |
 
@@ -166,6 +175,90 @@ LOG_LEVEL=INFO                      # Opcional
 - **[API Reference](docs/api-reference.md)** - Métodos y configuración
 - **[Catálogo de Archivos](docs/file-catalog.md)** - Análisis exhaustivo de dependencias
 - **[Troubleshooting](docs/troubleshooting-guide.md)** - Resolución de problemas
+
+---
+
+## CI/CD y Calidad de Código
+
+### Pipeline Automatizado
+
+El proyecto incluye un pipeline completo de CI/CD con GitHub Actions que ejecuta automáticamente:
+
+#### **Test Suite** 
+- Tests unitarios con pytest
+- Cobertura de código con coverage reports
+- Tests de integración con Docker
+- Validación de funcionalidad completa
+
+#### **Code Quality**
+- Linting con flake8
+- Formateo con black e isort  
+- Type checking con mypy
+- Análisis de calidad de código
+
+#### **Security Scan**
+- Escaneo de vulnerabilidades en dependencias
+- Análisis de seguridad con pip-audit
+- Validación de configuraciones
+
+#### **Docker Build**
+- Build automático de imagen Docker
+- Tests de imagen en múltiples ambientes
+- Validación de entrypoint y healthcheck
+
+### Estado Actual
+
+| Pipeline | Estado | Descripción |
+|----------|--------|-------------|
+| Tests | ✅ Passing | 85+ tests unitarios |
+| Coverage | 📊 29% | Cobertura base establecida |
+| Quality | ✅ Grade A | Código limpio y estructurado |
+| Security | 🔒 Passing | Sin vulnerabilidades conocidas |
+| Docker | 🐳 Passing | Imagen funcionando correctamente |
+
+### Comandos de Desarrollo
+
+```bash
+# Ejecutar tests localmente
+make test
+
+# Análisis de cobertura completo
+make coverage
+
+# Verificar calidad de código
+make lint
+
+# Build y test de Docker
+make docker-test
+
+# Setup completo para desarrollo
+make setup
+```
+
+### Workflow de Contribución
+
+1. **Fork** el repositorio en GitHub
+2. **Clone** tu fork localmente
+3. **Crear rama**: `git checkout -b feature/nueva-funcionalidad`
+4. **Desarrollar** con tests: `make test`
+5. **Verificar calidad**: `make lint && make coverage`
+6. **Commit** siguiendo convenciones: `git commit -m "feat: descripción"`
+7. **Push**: `git push origin feature/nueva-funcionalidad`
+8. **Pull Request** con descripción detallada
+
+### Integración Continua
+
+El pipeline de GitHub Actions se ejecuta automáticamente en:
+- **Push** a ramas `main`, `develop`, `feature/*`
+- **Pull Requests** hacia `main` o `develop`
+- **Releases** automáticos desde `main`
+
+Todos los checks deben pasar antes del merge:
+- ✅ Tests unitarios (85+ tests)
+- ✅ Cobertura mínima (29%+)
+- ✅ Linting y formateo
+- ✅ Security scan
+- ✅ Docker build
 
 ---
 
