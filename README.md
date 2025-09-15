@@ -161,6 +161,7 @@ LOG_LEVEL=INFO                      # Opcional
 - **[Arquitectura de Esquemas Dinámicos](docs/dynamic-schemas-architecture.md)** - Sistema adaptativo
 - **[Sistema GEPA](docs/gepa-system-architecture.md)** - Optimización genética
 - **[API Reference](docs/api-reference.md)** - Métodos y configuración
+- **[Catálogo de Archivos](docs/file-catalog.md)** - Análisis exhaustivo de dependencias
 - **[Troubleshooting](docs/troubleshooting-guide.md)** - Resolución de problemas
 
 ---
