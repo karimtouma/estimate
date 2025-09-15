@@ -38,12 +38,12 @@ FROM python:3.12-slim AS production
 
 # Metadata
 LABEL org.opencontainers.image.title="PDF Estimator" \
-      org.opencontainers.image.description="Modern PDF processing with Google GenAI" \
+      org.opencontainers.image.description="Sistema autónomo de análisis de documentos técnicos con GEPA" \
       org.opencontainers.image.version="2.0.0" \
-      org.opencontainers.image.authors="PDF Estimator Team" \
-      org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.source="https://github.com/pdf-estimator/pdf-estimator" \
-      org.opencontainers.image.documentation="https://pdf-estimator.readthedocs.io"
+      org.opencontainers.image.authors="Grupo DeAcero" \
+      org.opencontainers.image.licenses="BSD-2-Clause" \
+      org.opencontainers.image.source="https://github.com/karimtouma/estimate" \
+      org.opencontainers.image.documentation="https://github.com/karimtouma/estimate/blob/main/README.md"
 
 # Set production environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -116,7 +116,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 
 # Set entrypoint and default command
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["python", "main_advanced.py"]
+CMD ["python", "-m", "src.cli", "--help"]
 
 # Development stage
 FROM production AS development
