@@ -436,7 +436,7 @@ Ver [LICENSE](LICENSE) para detalles completos.
 
 - [Google Gemini](https://ai.google.dev/) - Modelo de lenguaje multimodal
 - [DSPy](https://github.com/stanfordnlp/dspy) - Framework para optimización de prompts
-- [GEPA](https://arxiv.org/abs/2404.01769) - Genetic Evolution Prompt Architecture (concepto inspirado)
+- [GEPA](https://github.com/gepa-ai/gepa) - Genetic Evolution Prompt Architecture (Reflective Text Evolution)
 - [Python](https://python.org/) - Lenguaje de programación
 - [Docker](https://docker.com/) - Contenedorización
 - [GitHub Actions](https://github.com/features/actions) - CI/CD
