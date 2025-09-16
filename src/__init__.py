@@ -9,15 +9,15 @@ __version__ = "1.0.0"
 __author__ = "PDF Estimator Team"
 __email__ = "team@pdf-estimator.com"
 
+from .core.config import Config, get_config
 from .core.processor import PDFProcessor
-from .core.config import get_config, Config
-from .models.schemas import DocumentAnalysis, SectionAnalysis, DataExtraction
+from .models.schemas import DataExtraction, DocumentAnalysis, SectionAnalysis
 
 __all__ = [
     "PDFProcessor",
     "get_config",
-    "Config", 
+    "Config",
     "DocumentAnalysis",
     "SectionAnalysis",
-    "DataExtraction"
+    "DataExtraction",
 ]

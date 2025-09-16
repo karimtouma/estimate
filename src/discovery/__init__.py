@@ -6,11 +6,7 @@ Dynamic discovery of document structure without predefined taxonomies.
 """
 
 from .dynamic_discovery import DynamicPlanoDiscovery
-from .pattern_analyzer import PatternAnalyzer
 from .nomenclature_parser import NomenclatureParser
+from .pattern_analyzer import PatternAnalyzer
 
-__all__ = [
-    'DynamicPlanoDiscovery',
-    'PatternAnalyzer', 
-    'NomenclatureParser'
-]
+__all__ = ["DynamicPlanoDiscovery", "PatternAnalyzer", "NomenclatureParser"]
