@@ -1,5 +1,5 @@
 # Código de Conducta
-## PDF Estimator - Grupo DeAcero
+## PDF Estimator
 
 ---
 
@@ -112,4 +112,4 @@ Las Guías de Impacto Comunitario fueron inspiradas por la [escalera de aplicaci
 
 **Versión**: 2.0  
 **Fecha de Adopción**: 15 de Septiembre, 2025  
-**Organización**: Grupo DeAcero
+**Proyecto**: PDF Estimator

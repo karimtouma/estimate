@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pdf-estimator"
 version = "2.0.0"
 description = "Sistema Autónomo de Análisis de Documentos Técnicos"
-authors = [{name = "Grupo DeAcero", email = "contact@grupodeacero.com"}]
+authors = [{name = "PDF Estimator Contributors", email = "contributors@pdf-estimator.org"}]
 license = {text = "BSD-2-Clause"}
 readme = "README.md"
 requires-python = ">=3.12"

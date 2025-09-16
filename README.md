@@ -61,6 +61,7 @@
 - **Juez inteligente**: Evaluación técnica con criterios especializados
 - **Consenso automático** entre candidatos para validación
 - **Evolución genética**: Mejora continua de prompts y estrategias
+- **Inspirado en**: [Algoritmos genéticos](https://en.wikipedia.org/wiki/Genetic_algorithm) y [DSPy](https://github.com/stanfordnlp/dspy)
 
 ### 3) Language Router
 - **Detección automática** del idioma principal del documento
@@ -423,17 +424,19 @@ make docker-test
 
 **BSD-2-Clause** - Permite uso comercial y modificación con atribución apropiada.
 
-Copyright (c) 2024 Grupo DeAcero. Ver [LICENSE](LICENSE) para detalles completos.
+Ver [LICENSE](LICENSE) para detalles completos.
 
 ---
 
 ## Agradecimientos
 
-**PDF Estimator** es una contribución de **[Grupo DeAcero](https://grupodeacero.com)** a la comunidad de Inteligencia Artificial en México y Latinoamérica, con el objetivo de democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos.
+**PDF Estimator** es una contribución a la comunidad de Inteligencia Artificial, con el objetivo de democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos.
 
 ### Tecnologías clave
 
 - [Google Gemini](https://ai.google.dev/) - Modelo de lenguaje multimodal
+- [DSPy](https://github.com/stanfordnlp/dspy) - Framework para optimización de prompts
+- [GEPA](https://arxiv.org/abs/2404.01769) - Genetic Evolution Prompt Architecture (concepto inspirado)
 - [Python](https://python.org/) - Lenguaje de programación
 - [Docker](https://docker.com/) - Contenedorización
 - [GitHub Actions](https://github.com/features/actions) - CI/CD

@@ -1,5 +1,5 @@
 # Política de Seguridad
-## PDF Estimator - Grupo DeAcero
+## PDF Estimator
 
 ---
 

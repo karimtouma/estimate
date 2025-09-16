@@ -1,5 +1,5 @@
 # Guía de Contribución
-## PDF Estimator - Grupo DeAcero
+## PDF Estimator
 
 ¡Gracias por tu interés en contribuir a PDF Estimator! Este documento te guiará sobre cómo participar en este proyecto opensource.
 
@@ -161,7 +161,7 @@ por juez inteligente para mejorar precisión.
 
 ### Maintainers
 - **Karim Touma** - [@karimtouma](https://github.com/karimtouma)
-- **Grupo DeAcero** - Organización patrocinadora
+- **Contributors** - Ver [contributors](https://github.com/karimtouma/estimate/graphs/contributors)
 
 ### Comunidad
 - **Issues**: [GitHub Issues](https://github.com/karimtouma/estimate/issues)

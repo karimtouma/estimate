@@ -1,5 +1,5 @@
 # Checklist para Release Opensource
-## PDF Estimator v2.0.0 - Grupo DeAcero
+## PDF Estimator v2.0.0
 
 **Fecha de Análisis**: 15 de Septiembre, 2025  
 **Estado**: En preparación para release
@@ -10,7 +10,7 @@
 
 ### Documentación Esencial
 - ✅ **README.md**: Profesional, completo, métricas verificadas
-- ✅ **LICENSE**: BSD-2-Clause con copyright Grupo DeAcero
+- ✅ **LICENSE**: BSD-2-Clause con copyright Contributors
 - ✅ **CHANGELOG.md**: Historial completo de cambios v2.0.0
 - ✅ **docs/**: Documentación técnica exhaustiva (5 archivos)
 
