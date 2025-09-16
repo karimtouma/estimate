@@ -1,7 +1,7 @@
 # Guía de Contribución
-## PDF Estimator
+## Understanding
 
-¡Gracias por tu interés en contribuir a PDF Estimator! Este documento te guiará sobre cómo participar en este proyecto opensource.
+¡Gracias por tu interés en contribuir a Understanding! Este documento te guiará sobre cómo participar en este proyecto opensource.
 
 ---
 
@@ -161,11 +161,11 @@ por juez inteligente para mejorar precisión.
 
 ### Maintainers
 - **Karim Touma** - [@karimtouma](https://github.com/karimtouma)
-- **Contributors** - Ver [contributors](https://github.com/karimtouma/estimate/graphs/contributors)
+- **Contributors** - Ver [contributors](https://github.com/karimtouma/understanding/graphs/contributors)
 
 ### Comunidad
-- **Issues**: [GitHub Issues](https://github.com/karimtouma/estimate/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/karimtouma/estimate/discussions)
+- **Issues**: [GitHub Issues](https://github.com/karimtouma/understanding/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/karimtouma/understanding/discussions)
 
 ---
 

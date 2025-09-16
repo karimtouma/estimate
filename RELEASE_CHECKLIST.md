@@ -1,5 +1,5 @@
 # Checklist para Release Opensource
-## PDF Estimator v2.0.0
+## Understanding v2.0.0
 
 **Fecha de Análisis**: 15 de Septiembre, 2025  
 **Estado**: En preparación para release

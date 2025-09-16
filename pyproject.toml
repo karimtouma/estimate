@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pdf-estimator"
+name = "understanding"
 version = "2.0.0"
 description = "Sistema Autónomo de Análisis de Documentos Técnicos"
 authors = [{name = "PDF Estimator Contributors", email = "contributors@pdf-estimator.org"}]
@@ -20,9 +20,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/karimtouma/estimate"
-"Bug Reports" = "https://github.com/karimtouma/estimate/issues"
-Source = "https://github.com/karimtouma/estimate"
+Homepage = "https://github.com/karimtouma/understanding"
+"Bug Reports" = "https://github.com/karimtouma/understanding/issues"
+Source = "https://github.com/karimtouma/understanding"
 
 [tool.black]
 line-length = 100

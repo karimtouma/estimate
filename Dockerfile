@@ -37,13 +37,13 @@ RUN pip install --upgrade pip setuptools wheel && \
 FROM python:3.12-slim AS production
 
 # Metadata
-LABEL org.opencontainers.image.title="PDF Estimator" \
+LABEL org.opencontainers.image.title="Understanding" \
       org.opencontainers.image.description="Sistema autónomo de análisis de documentos técnicos con GEPA" \
       org.opencontainers.image.version="2.0.0" \
       org.opencontainers.image.authors="PDF Estimator Contributors" \
       org.opencontainers.image.licenses="BSD-2-Clause" \
-      org.opencontainers.image.source="https://github.com/karimtouma/estimate" \
-      org.opencontainers.image.documentation="https://github.com/karimtouma/estimate/blob/main/README.md"
+      org.opencontainers.image.source="https://github.com/karimtouma/understanding" \
+      org.opencontainers.image.documentation="https://github.com/karimtouma/understanding/blob/main/README.md"
 
 # Set production environment variables
 ENV PYTHONUNBUFFERED=1 \

@@ -1,18 +1,18 @@
-# PDF Estimator · Estimating Agent
+# Understanding · Document Analysis System
 **Sistema autónomo para análisis de documentos técnicos (PDF) con esquemas dinámicos y optimización genética (GEPA).**
 
-[![CI/CD Pipeline](https://github.com/grupodeacero/estimate/actions/workflows/ci.yml/badge.svg)](https://github.com/grupodeacero/estimate/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-85%2B%20passing-brightgreen.svg)](https://github.com/grupodeacero/estimate/actions)
-[![Coverage](https://img.shields.io/badge/coverage-29%25-yellow.svg)](https://github.com/grupodeacero/estimate/actions)
-[![Code Quality](https://img.shields.io/badge/code%20quality-A-green.svg)](https://github.com/grupodeacero/estimate/actions)
-[![Security](https://img.shields.io/badge/security-passing-green.svg)](https://github.com/grupodeacero/estimate/security)
-[![Docker](https://img.shields.io/badge/docker%20build-passing-brightgreen.svg)](https://github.com/grupodeacero/estimate/actions)
+[![CI/CD Pipeline](https://github.com/karimtouma/understanding/actions/workflows/ci.yml/badge.svg)](https://github.com/karimtouma/understanding/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-85%2B%20passing-brightgreen.svg)](https://github.com/karimtouma/understanding/actions)
+[![Coverage](https://img.shields.io/badge/coverage-29%25-yellow.svg)](https://github.com/karimtouma/understanding/actions)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A-green.svg)](https://github.com/karimtouma/understanding/actions)
+[![Security](https://img.shields.io/badge/security-passing-green.svg)](https://github.com/karimtouma/understanding/security)
+[![Docker](https://img.shields.io/badge/docker%20build-passing-brightgreen.svg)](https://github.com/karimtouma/understanding/actions)
 
 [![Licencia: BSD-2-Clause](https://img.shields.io/badge/Licencia-BSD--2--Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
 [![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.5%20Pro-orange.svg)](https://ai.google.dev/)
-[![Versión](https://img.shields.io/badge/versión-v2.0.0-blue.svg)](https://github.com/grupodeacero/estimate)
+[![Versión](https://img.shields.io/badge/versión-v2.0.0-blue.svg)](https://github.com/karimtouma/understanding)
 
 ---
 
@@ -44,7 +44,7 @@
 
 ## Resumen
 
-**PDF Estimator** automatiza el análisis de documentos técnicos en PDF. No requiere taxonomías previas: descubre la estructura del documento, clasifica elementos con múltiples candidatos y selecciona el mejor mediante un **juez inteligente** y **consenso**, optimizando continuamente con técnicas evolutivas (**GEPA**). Incluye enrutamiento de idioma (detección/optimización de prompts), análisis contextual y mapeo completo de páginas.
+**Understanding** automatiza el análisis de documentos técnicos en PDF. No requiere taxonomías previas: descubre la estructura del documento, clasifica elementos con múltiples candidatos y selecciona el mejor mediante un **juez inteligente** y **consenso**, optimizando continuamente con técnicas evolutivas (**GEPA**). Incluye enrutamiento de idioma (detección/optimización de prompts), análisis contextual y mapeo completo de páginas.
 
 ---
 
@@ -129,8 +129,8 @@ flowchart TD
 
 ```bash
 # 1) Clonar y preparar entorno
-git clone https://github.com/grupodeacero/estimate.git
-cd estimate
+git clone https://github.com/karimtouma/understanding.git
+cd understanding
 make setup
 
 # 2) Configurar credenciales (Gemini)
@@ -163,14 +163,14 @@ cat output/file_comprehensive_analysis.json | jq '.dynamic_schema_results'
 
 ```bash
 # Build de la imagen
-docker build -t pdf-estimator:local .
+docker build -t understanding:local .
 
 # Ejecución con volúmenes
 docker run --rm \
   --env-file .env \
   -v "$PWD/input:/app/input" \
   -v "$PWD/output:/app/output" \
-  pdf-estimator:local make job
+  understanding:local make job
 
 # Con configuración personalizada
 docker run --rm \
@@ -178,7 +178,7 @@ docker run --rm \
   -v "$PWD/input:/app/input" \
   -v "$PWD/output:/app/output" \
   -v "$PWD/config.toml:/app/config.toml:ro" \
-  pdf-estimator:local make job
+  understanding:local make job
 ```
 
 ---
@@ -413,10 +413,10 @@ make docker-test
 
 ## Soporte y contacto
 
-- **Repositorio**: [github.com/grupodeacero/estimate](https://github.com/grupodeacero/estimate)
-- **Issues**: [GitHub Issues](https://github.com/grupodeacero/estimate/issues)
+- **Repositorio**: [github.com/karimtouma/understanding](https://github.com/karimtouma/understanding)
+- **Issues**: [GitHub Issues](https://github.com/karimtouma/understanding/issues)
 - **Documentación**: Directorio `docs/` para referencia técnica
-- **Discusiones**: [GitHub Discussions](https://github.com/grupodeacero/estimate/discussions)
+- **Discusiones**: [GitHub Discussions](https://github.com/karimtouma/understanding/discussions)
 
 ---
 
@@ -430,7 +430,7 @@ Ver [LICENSE](LICENSE) para detalles completos.
 
 ## Agradecimientos
 
-**PDF Estimator** es una contribución a la comunidad de Inteligencia Artificial, con el objetivo de democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos.
+**Understanding** es una contribución a la comunidad de Inteligencia Artificial, con el objetivo de democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos.
 
 ### Tecnologías clave
 
@@ -443,7 +443,7 @@ Ver [LICENSE](LICENSE) para detalles completos.
 
 ### Contribuidores
 
-Ver [contributors](https://github.com/grupodeacero/estimate/graphs/contributors) para la lista completa.
+Ver [contributors](https://github.com/karimtouma/understanding/graphs/contributors) para la lista completa.
 
 ---
 
