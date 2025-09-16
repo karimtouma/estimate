@@ -1,5 +1,5 @@
-# PDF Estimator
-## Sistema Autónomo de Análisis de Documentos Técnicos
+# PDF Estimator · Estimating Agent
+**Sistema autónomo para análisis de documentos técnicos (PDF) con esquemas dinámicos y optimización genética (GEPA).**
 
 [![CI/CD Pipeline](https://github.com/karimtouma/estimate/actions/workflows/ci.yml/badge.svg)](https://github.com/karimtouma/estimate/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-85%2B%20passing-brightgreen.svg)](https://github.com/karimtouma/estimate/actions)
@@ -14,60 +14,140 @@
 [![Gemini AI](https://img.shields.io/badge/IA-Gemini%202.5%20Pro-orange.svg)](https://ai.google.dev/)
 [![Versión](https://img.shields.io/badge/versión-v2.0.0-blue.svg)](https://github.com/karimtouma/estimate)
 
-PDF Estimator es un sistema autónomo para análisis inteligente de documentos técnicos que utiliza esquemas dinámicos y optimización genética (GEPA) para adaptarse automáticamente a cualquier tipo de documento sin configuración previa.
+---
+
+## Tabla de contenidos
+- [Resumen](#resumen)
+- [Características clave](#características-clave)
+- [Arquitectura](#arquitectura)
+- [Rendimiento y costos](#rendimiento-y-costos)
+- [Requisitos](#requisitos)
+- [Inicio rápido](#inicio-rápido)
+- [Ejecución](#ejecución)
+  - [Local (Make)](#local-make)
+  - [Docker](#docker)
+- [Configuración](#configuración)
+  - [Variables de entorno](#variables-de-entorno)
+  - [config.toml](#configtoml)
+- [Resultados y formatos](#resultados-y-formatos)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Calidad y CI/CD](#calidad-y-cicd)
+- [Guía de desarrollo](#guía-de-desarrollo)
+- [Roadmap](#roadmap)
+- [Seguridad y privacidad](#seguridad-y-privacidad)
+- [Contribución y gobernanza](#contribución-y-gobernanza)
+- [Soporte y contacto](#soporte-y-contacto)
+- [Licencia](#licencia)
+- [Agradecimientos](#agradecimientos)
 
 ---
 
-## Características Principales
+## Resumen
 
-### Autonomía Completa
-- **Esquemas Dinámicos**: Adaptación automática a cualquier tipo de documento técnico
-- **Descubrimiento Inteligente**: Identificación de patrones sin configuración previa
-- **Clasificación Adaptativa**: Registro automático de nuevos tipos de elementos
-- **Operación Sin Configuración**: Funcionamiento inmediato sin taxonomías predefinidas
-
-### GEPA Optimization System
-- **Múltiples Candidatos**: 5 opciones de clasificación por elemento
-- **Juez Inteligente**: Evaluación técnica (99.7% judge score)
-- **Consenso Automático**: Análisis de acuerdo entre candidatos (97.5%)
-- **Evolución Genética**: Mejora continua mediante algoritmos evolutivos
-
-### Language Router
-- **Detección Automática**: Identificación del idioma principal
-- **Optimización Adaptativa**: Ajuste de prompts por idioma
-- **Soporte Multiidioma**: Documentos técnicos en múltiples idiomas
-- **Configuración Flexible**: Idioma de salida configurable
-
-### Rendimiento Empresarial
-- **Tiempo**: 13-14 minutos (documentos de 51 páginas)
-- **Costo**: $0.089 USD por análisis completo
-- **Precisión**: 95-100% de elementos identificados
-- **Judge Score GEPA**: 100% (calidad perfecta)
-- **Consenso GEPA**: 95.9% entre candidatos
-- **Eficiencia**: 49.5% reutilización de tokens
+**PDF Estimator** automatiza el análisis de documentos técnicos en PDF. No requiere taxonomías previas: descubre la estructura del documento, clasifica elementos con múltiples candidatos y selecciona el mejor mediante un **juez inteligente** y **consenso**, optimizando continuamente con técnicas evolutivas (**GEPA**). Incluye enrutamiento de idioma (detección/optimización de prompts), análisis contextual y mapeo completo de páginas.
 
 ---
 
-## Inicio Rápido
+## Características clave
+
+### 1) Autonomía completa
+- **Esquemas dinámicos**: Adaptación automática a distintos tipos de documentos técnicos
+- **Descubrimiento inteligente**: Identificación de patrones sin configuración previa
+- **Clasificación adaptativa**: Registro automático de nuevos tipos de elementos
+- **Sin configuración inicial**: Funciona de inmediato, sin taxonomías predefinidas
+
+### 2) GEPA Optimization System
+- **Múltiples candidatos** por elemento (típicamente 5)
+- **Juez inteligente**: Evaluación técnica con criterios especializados
+- **Consenso automático** entre candidatos para validación
+- **Evolución genética**: Mejora continua de prompts y estrategias
+
+### 3) Language Router
+- **Detección automática** del idioma principal del documento
+- **Optimización adaptativa** de prompts por idioma detectado
+- **Soporte multilingüe** para documentos con contenido mixto
+- **Salida configurable** en el idioma preferido
+
+### 4) Capacidades de análisis
+- **Core analysis**: Contexto global, secciones, entidades y datos clave
+- **Q&A adaptativo**: Preguntas contextuales automáticas para completar información
+- **Page mapping**: Mapeo completo de páginas y elementos detectados
+- **Registro evolutivo**: Aprendizaje continuo basado en evidencia
+
+---
+
+## Arquitectura
+
+```mermaid
+flowchart TD
+    A[PDF de entrada] -->|Upload| B[Gemini API]
+    B --> C[Discovery Engine<br/>~30% muestras]
+    C --> D[Language Router]
+    D --> E[GEPA Classification<br/>N candidatos]
+    E --> F[Juez + Consenso]
+    F --> G[Intelligent Classifier<br/>Estrategias IA]
+    G --> H[Core Analysis / Q&A]
+    H --> I[Page Mapping]
+    I --> J[Resultados JSON<br/>+ Métricas]
+```
+
+**Flujo de procesamiento:**
+
+1. **Upload** → 2. **Discovery** → 3. **Detección de idioma** → 
+4. **GEPA (candidatos + juez)** → 5. **Core analysis** → 
+6. **Q&A adaptativo** → 7. **Page mapping** → 8. **Resultados**
+
+---
+
+## Rendimiento y costos
+
+> Métricas de referencia para un documento de ~51 páginas. Los valores pueden variar según el documento y configuración.
+
+| Métrica | Valor |
+|---------|-------|
+| **Tiempo total** | 13-14 min |
+| **Costo estimado** | $0.089 USD |
+| **Precisión** | 95-100% elementos |
+| **Judge Score GEPA** | ~100% |
+| **Consenso promedio** | ~95.9% |
+| **Eficiencia de caché** | ~49.5% tokens |
+| **Tipos descubiertos** | 7-10 únicos |
+
+---
+
+## Requisitos
+
+- **Python 3.12+**
+- **Make** (para comandos de conveniencia)
+- **jq** (opcional, para explorar JSON de salida)
+- **Docker** (opcional, para ejecución contenedorizada)
+
+---
+
+## Inicio rápido
 
 ```bash
-# Instalación
+# 1) Clonar y preparar entorno
 git clone https://github.com/karimtouma/estimate.git
 cd estimate
 make setup
 
-# Configuración
+# 2) Configurar credenciales (Gemini)
 echo "GEMINI_API_KEY=tu_clave_api" > .env
 
-# Análisis
+# 3) Ejecutar un análisis
 cp tu_documento.pdf input/file.pdf
 make job
 
-# Resultados
+# 4) Inspeccionar resultados
 cat output/file_comprehensive_analysis.json | jq '.dynamic_schema_results'
 ```
 
-### Comandos Disponibles
+---
+
+## Ejecución
+
+### Local (Make)
 
 | Comando | Descripción | Tiempo |
 |---------|-------------|--------|
@@ -78,57 +158,43 @@ cat output/file_comprehensive_analysis.json | jq '.dynamic_schema_results'
 | `make status` | Verificar configuración | <1 seg |
 | `make results` | Ver últimos resultados | <1 seg |
 
----
+### Docker
 
-## Arquitectura del Sistema
+```bash
+# Build de la imagen
+docker build -t pdf-estimator:local .
 
-### Componentes Principales
+# Ejecución con volúmenes
+docker run --rm \
+  --env-file .env \
+  -v "$PWD/input:/app/input" \
+  -v "$PWD/output:/app/output" \
+  pdf-estimator:local make job
 
-**Discovery Engine**: Análisis estratégico de muestras documentales (30% de cobertura) para identificación de patrones estructurales.
-
-**GEPA Classification**: Optimización genética que genera múltiples candidatos por elemento con evaluación por juez inteligente.
-
-**Language Router**: Detección automática de idioma con optimización adaptativa de prompts.
-
-**Intelligent Classifier**: Cuatro estrategias complementarias usando exclusivamente reasoning de IA.
-
-**Auto-Registry**: Registro automático con evolución continua basada en evidencia.
-
-### Flujo de Procesamiento
-
-1. **Upload**: Subida del PDF a Gemini API
-2. **Discovery**: Análisis de muestras con esquemas dinámicos
-3. **Language Detection**: Identificación de idioma y optimización
-4. **GEPA Classification**: Múltiples candidatos y evaluación por juez
-5. **Core Analysis**: Análisis general, secciones y datos
-6. **Q&A Adaptativo**: Preguntas contextuales automáticas
-7. **Page Mapping**: Clasificación completa de páginas
-8. **Results**: Compilación con métricas detalladas
-
----
-
-## Casos de Uso
-
-### Documentos de Construcción
-- Planos arquitectónicos y estructurales
-- Especificaciones técnicas MEP
-- Análisis de códigos y cumplimiento normativo
-
-### Documentos de Ingeniería
-- Diagramas técnicos y esquemáticos
-- Especificaciones de equipos
-- Manuales técnicos y reportes
-
-### Análisis Multiidioma
-- Documentos en español, inglés o mixtos
-- Optimización automática por idioma
-- Preservación de terminología técnica
+# Con configuración personalizada
+docker run --rm \
+  --env-file .env \
+  -v "$PWD/input:/app/input" \
+  -v "$PWD/output:/app/output" \
+  -v "$PWD/config.toml:/app/config.toml:ro" \
+  pdf-estimator:local make job
+```
 
 ---
 
 ## Configuración
 
-### config.toml Básico
+### Variables de entorno
+
+```bash
+# Requerida
+GEMINI_API_KEY=tu_clave_api_gemini
+
+# Opcional
+LOG_LEVEL=INFO
+```
+
+### config.toml
 
 ```toml
 [api]
@@ -145,48 +211,80 @@ gepa_always_enhance = true
 gepa_num_candidates = 5
 ```
 
-### Variables de Entorno
+Ver [docs/api-reference.md](docs/api-reference.md) para configuración completa.
+
+---
+
+## Resultados y formatos
+
+La ejecución genera un JSON integral (`output/file_comprehensive_analysis.json`) con:
+
+- `dynamic_schema_results`: Tipos descubiertos y evidencias
+- `core_analysis`: Hallazgos globales y por sección
+- `qa`: Preguntas/respuestas contextuales
+- `page_mapping`: Mapeo de páginas y elementos clasificados
+- `metrics`: Tiempos, contadores y métricas GEPA
+
+### Exploración de resultados
 
 ```bash
-GEMINI_API_KEY=tu_clave_api_gemini  # Requerido
-LOG_LEVEL=INFO                      # Opcional
+# Tipos detectados
+jq '.dynamic_schema_results.discovered_element_types' output/file_comprehensive_analysis.json
+
+# Métricas GEPA
+jq '.dynamic_schema_results.gepa_statistics' output/file_comprehensive_analysis.json
+
+# Páginas mapeadas
+jq '.page_mapping | length' output/file_comprehensive_analysis.json
+
+# Análisis core
+jq '.core_analysis.general_analysis' output/file_comprehensive_analysis.json
 ```
 
 ---
 
-## Métricas de Rendimiento
+## Estructura del repositorio
 
-| Métrica | Valor | Descripción |
-|---------|--------|-------------|
-| Tiempo | 13-14 min | Documentos de 51 páginas |
-| Costo | $0.089 USD | Análisis completo |
-| Precisión | 95-100% | Elementos identificados |
-| Judge Score | 100% | Calidad GEPA (PERFECTO) |
-| Consenso | 95.9% | Acuerdo entre candidatos |
-| Cache Efficiency | 49.5% | Reutilización de tokens |
-| Tipos Descubiertos | 7 únicos | Por documento |
+```
+estimate/
+├── src/                    # Código fuente principal
+│   ├── core/              # Procesamiento central
+│   ├── discovery/         # Motor de descubrimiento
+│   ├── models/            # Esquemas y clasificadores
+│   ├── optimization/      # Sistema GEPA
+│   ├── services/          # Cliente Gemini
+│   └── utils/             # Utilidades y routing
+├── docs/                   # Documentación técnica
+│   ├── api-reference.md
+│   ├── dynamic-schemas-architecture.md
+│   ├── gepa-system-architecture.md
+│   └── troubleshooting-guide.md
+├── tests/                  # Suite de pruebas
+├── input/                  # PDFs de entrada
+├── output/                 # Resultados JSON
+├── config.toml            # Configuración
+├── Makefile               # Automatización
+├── Dockerfile             # Imagen Docker
+├── requirements.txt       # Dependencias Python
+├── pyproject.toml         # Configuración de build
+├── CHANGELOG.md           # Historial de versiones
+├── CONTRIBUTING.md        # Guía de contribución
+├── CODE_OF_CONDUCT.md     # Código de conducta
+├── SECURITY.md            # Política de seguridad
+└── LICENSE                # BSD-2-Clause
+```
 
 ---
 
-## Documentación Técnica
+## Calidad y CI/CD
 
-- **[Arquitectura de Esquemas Dinámicos](docs/dynamic-schemas-architecture.md)** - Sistema adaptativo
-- **[Sistema GEPA](docs/gepa-system-architecture.md)** - Optimización genética
-- **[API Reference](docs/api-reference.md)** - Métodos y configuración
-- **[Catálogo de Archivos](docs/file-catalog.md)** - Análisis exhaustivo de dependencias
-- **[Troubleshooting](docs/troubleshooting-guide.md)** - Resolución de problemas
+### Pipeline automatizado
 
----
-
-## CI/CD y Calidad de Código
-
-### Pipeline Automatizado
-
-El proyecto incluye un pipeline completo de CI/CD con GitHub Actions que ejecuta automáticamente:
+El pipeline de GitHub Actions ejecuta automáticamente:
 
 #### **Test Suite** 
 - Tests unitarios con pytest
-- Cobertura de código con coverage reports
+- Cobertura de código con reports
 - Tests de integración con Docker
 - Validación de funcionalidad completa
 
@@ -206,7 +304,7 @@ El proyecto incluye un pipeline completo de CI/CD con GitHub Actions que ejecuta
 - Tests de imagen en múltiples ambientes
 - Validación de entrypoint y healthcheck
 
-### Estado Actual
+### Estado actual
 
 | Pipeline | Estado | Descripción |
 |----------|--------|-------------|
@@ -216,13 +314,20 @@ El proyecto incluye un pipeline completo de CI/CD con GitHub Actions que ejecuta
 | Security | 🔒 Passing | Sin vulnerabilidades conocidas |
 | Docker | 🐳 Passing | Imagen funcionando correctamente |
 
-### Comandos de Desarrollo
+---
+
+## Guía de desarrollo
+
+### Setup inicial
 
 ```bash
+# Preparar entorno de desarrollo
+make setup
+
 # Ejecutar tests localmente
 make test
 
-# Análisis de cobertura completo
+# Análisis de cobertura
 make coverage
 
 # Verificar calidad de código
@@ -230,12 +335,9 @@ make lint
 
 # Build y test de Docker
 make docker-test
-
-# Setup completo para desarrollo
-make setup
 ```
 
-### Workflow de Contribución
+### Workflow de contribución
 
 1. **Fork** el repositorio en GitHub
 2. **Clone** tu fork localmente
@@ -246,34 +348,102 @@ make setup
 7. **Push**: `git push origin feature/nueva-funcionalidad`
 8. **Pull Request** con descripción detallada
 
-### Integración Continua
+### Convenciones
 
-El pipeline de GitHub Actions se ejecuta automáticamente en:
-- **Push** a ramas `main`, `develop`, `feature/*`
-- **Pull Requests** hacia `main` o `develop`
-- **Releases** automáticos desde `main`
-
-Todos los checks deben pasar antes del merge:
-- ✅ Tests unitarios (85+ tests)
-- ✅ Cobertura mínima (29%+)
-- ✅ Linting y formateo
-- ✅ Security scan
-- ✅ Docker build
+- **Estilo**: black/isort para formateo, flake8 para linting
+- **Commits**: Conventional Commits (`feat:`, `fix:`, `docs:`, etc.)
+- **Tests**: Mínimo 80% cobertura para nuevas features
+- **Documentación**: Actualizar docs/ para cambios de API
 
 ---
 
-## Información del Proyecto
+## Roadmap
 
-### Contribución Corporativa
+### v2.1.0 (Q1 2025)
+- [ ] Conectores de entrada (S3/GCS/Azure)
+- [ ] Procesamiento batch paralelo
+- [ ] API REST para integración
 
-PDF Estimator es una contribución de **Grupo DeAcero** a la comunidad de Inteligencia Artificial de México y Latinoamérica, con el objetivo de democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos.
+### v2.2.0 (Q2 2025)
+- [ ] Catálogo de esquemas reutilizables
+- [ ] Feedback loop para mejora continua
+- [ ] Reportes ejecutivos HTML/Markdown
 
-### Licencia
+### v3.0.0 (Q3 2025)
+- [ ] Multi-modelo (soporte para otros LLMs)
+- [ ] Pipeline de fine-tuning
+- [ ] Métricas de calidad avanzadas
 
-Distribuido bajo licencia BSD-2-Clause. Permite uso comercial y modificación con atribución apropiada.
+> Las propuestas y PRs son bienvenidas. Abre un issue para discutir cambios mayores.
 
-### Soporte
+---
+
+## Seguridad y privacidad
+
+- **Credenciales**: No se persisten; usa `GEMINI_API_KEY` desde `.env`
+- **Procesamiento**: Los documentos se envían a Gemini API según sus [términos de servicio](https://ai.google.dev/terms)
+- **Datos sensibles**: Valida políticas organizacionales antes de procesar información confidencial
+- **Vulnerabilidades**: Reportar según [SECURITY.md](SECURITY.md)
+
+### Mejores prácticas
+
+1. Rotar API keys regularmente
+2. Usar secrets management en producción
+3. Auditar logs de acceso
+4. Encriptar documentos sensibles en reposo
+
+---
+
+## Contribución y gobernanza
+
+- **Código de conducta**: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- **Guía de contribución**: [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+- **Issues/PRs**: Incluir contexto, pasos de reproducción y tests
+
+### Proceso de release
+
+1. Desarrollo en `feature/*` branches
+2. PR review con al menos 1 aprobación
+3. Merge a `develop` para testing
+4. Release desde `main` con tag semántico
+
+---
+
+## Soporte y contacto
 
 - **Repositorio**: [github.com/karimtouma/estimate](https://github.com/karimtouma/estimate)
 - **Issues**: [GitHub Issues](https://github.com/karimtouma/estimate/issues)
 - **Documentación**: Directorio `docs/` para referencia técnica
+- **Discusiones**: [GitHub Discussions](https://github.com/karimtouma/estimate/discussions)
+
+---
+
+## Licencia
+
+**BSD-2-Clause** - Permite uso comercial y modificación con atribución apropiada.
+
+Copyright (c) 2024 Grupo DeAcero. Ver [LICENSE](LICENSE) para detalles completos.
+
+---
+
+## Agradecimientos
+
+**PDF Estimator** es una contribución de **[Grupo DeAcero](https://grupodeacero.com)** a la comunidad de Inteligencia Artificial en México y Latinoamérica, con el objetivo de democratizar el acceso a tecnologías avanzadas de análisis de documentos técnicos.
+
+### Tecnologías clave
+
+- [Google Gemini](https://ai.google.dev/) - Modelo de lenguaje multimodal
+- [Python](https://python.org/) - Lenguaje de programación
+- [Docker](https://docker.com/) - Contenedorización
+- [GitHub Actions](https://github.com/features/actions) - CI/CD
+
+### Contribuidores
+
+Ver [contributors](https://github.com/karimtouma/estimate/graphs/contributors) para la lista completa.
+
+---
+
+<p align="center">
+  <strong>⭐ Si este proyecto te resulta útil, considera darle una estrella en GitHub ⭐</strong>
+</p>
